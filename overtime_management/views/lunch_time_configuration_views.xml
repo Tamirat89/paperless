@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Lunch Time Configuration Form View -->
+    <record id="view_lunch_time_configuration_form" model="ir.ui.view">
+        <field name="name">lunch.time.configuration.form</field>
+        <field name="model">lunch.time.configuration</field>
+        <field name="arch" type="xml">
+            <form string="Lunch Time Configuration">
+                <header>
+                    <!-- Approve Button -->
+                    <button name="action_approve" 
+                            string="Approve" 
+                            type="object" 
+                            class="btn-success"
+                            groups="overtime_management.group_overtime_request_hr_manager"
+                            invisible="state != 'draft'"/>
+                    
+                    <!-- Reject Button -->
+                    <button name="action_reject" 
+                            string="Reject" 
+                            type="object" 
+                            class="btn-danger"
+                            groups="overtime_management.group_overtime_request_hr_manager"
+                            invisible="state != 'draft'"/>
+                    
+                    <!-- Reset to Draft Button -->
+                    <button name="action_reset_to_draft" 
+                            string="Reset to Draft" 
+                            type="object" 
+                            class="btn-warning"
+                            groups="overtime_management.group_overtime_request_hr_manager"
+                            invisible="state == 'draft'"/>
+                    
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,approved,rejected"/>
+                </header>
+                
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="toggle_active" type="object" class="oe_stat_button" icon="fa-archive">
+                            <field name="active" widget="boolean_button" options='{"terminology": "archive"}'/>
+                        </button>
+                    </div>
+                    
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="e.g., Standard Lunch Time" readonly="state != 'draft'"/>
+                        </h1>
+                    </div>
+                    
+                    <group>
+                        <group>
+                            <field name="company_id" groups="base.group_multi_company" options="{'no_create': True}"/>
+                            <field name="is_active_config" widget="boolean_toggle"/>
+                            <field name="lunch_start_time" widget="float_time" readonly="state != 'draft'"/>
+                            <field name="lunch_end_time" widget="float_time" readonly="state != 'draft'"/>
+                        </group>
+                        <group>
+                            <field name="total_lunch_hours" widget="float_time"/>
+                        </group>
+                    </group>
+                    
+                    <!-- <notebook>
+                        <page string="Information">
+                            <group>
+                                <group string="Time Details">
+                                    <label string="Lunch Start Time: Enter in 24-hour format (e.g., 12.0 for 12:00, 12.5 for 12:30)"/>
+                                    <label string="Lunch End Time: Enter in 24-hour format (e.g., 13.0 for 13:00, 13.5 for 13:30)"/>
+                                    <label string="Total Lunch Hours: Automatically calculated as End Time - Start Time"/>
+                                </group>
+                                <group string="Usage">
+                                    <label string="This configuration will be used to calculate overtime hours."/>
+                                    <label string="Lunch hours will be deducted from total worked hours if overtime period overlaps with lunch time."/>
+                                    <label string="Only approved configurations are used in calculations."/>
+                                    <label string="Only one approved configuration is allowed per company."/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook> -->
+                </sheet>
+                
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Lunch Time Configuration Tree View -->
+    <record id="view_lunch_time_configuration_tree" model="ir.ui.view">
+        <field name="name">lunch.time.configuration.tree</field>
+        <field name="model">lunch.time.configuration</field>
+        <field name="arch" type="xml">
+            <list string="Lunch Time Configurations" decoration-success="state == 'approved'" decoration-danger="state == 'rejected'" decoration-muted="state == 'draft'">
+                <field name="name"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="is_active_config" widget="boolean_toggle"/>
+                <field name="lunch_start_time" widget="float_time"/>
+                <field name="lunch_end_time" widget="float_time"/>
+                <field name="total_lunch_hours" widget="float_time"/>
+                <field name="state" widget="badge" decoration-success="state == 'approved'" decoration-danger="state == 'rejected'" decoration-info="state == 'draft'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Lunch Time Configuration Search View -->
+    <!-- <record id="view_lunch_time_configuration_search" model="ir.ui.view">
+        <field name="name">lunch.time.configuration.search</field>
+        <field name="model">lunch.time.configuration</field>
+        <field name="arch" type="xml">
+            <search string="Search Lunch Time Configurations">
+                <field name="name"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                
+                <filter string="Active for Calculation" name="filter_active_config" domain="[('is_active_config', '=', True)]"/>
+                <filter string="Inactive for Calculation" name="filter_inactive_config" domain="[('is_active_config', '=', False)]"/>
+                
+                <separator/>
+                <filter string="Draft" name="filter_draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Approved" name="filter_approved" domain="[('state', '=', 'approved')]"/>
+                <filter string="Rejected" name="filter_rejected" domain="[('state', '=', 'rejected')]"/>
+                
+                <separator/>
+                <filter string="Archived" name="filter_inactive" domain="[('active', '=', False)]"/>
+                
+                <group expand="0" string="Group By">
+                    <filter string="Company" name="group_company" context="{'group_by': 'company_id'}"/>
+                    <filter string="State" name="group_state" context="{'group_by': 'state'}"/>
+                    <filter string="Active Status" name="group_active_config" context="{'group_by': 'is_active_config'}"/>
+                </group>
+            </search>
+        </field>
+    </record> -->
+
+    <!-- Action for Lunch Time Configuration -->
+    <record id="action_lunch_time_configuration" model="ir.actions.act_window">
+        <field name="name">Lunch Time Configuration</field>
+        <field name="res_model">lunch.time.configuration</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_lunch_time_configuration_tree"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a Lunch Time Configuration
+            </p>
+            <p>
+                Configure lunch break times that will be deducted from overtime calculations.
+                Only approved configurations will be used in overtime hour calculations.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Item -->
+    <menuitem id="menu_lunch_time_configuration"
+              name="Lunch Time Configuration"
+              parent="overtime_management.menu_hr_overtime_root"
+              action="action_lunch_time_configuration"
+              groups="overtime_management.group_overtime_request_hr_manager"
+              sequence="50"
+              />
+</odoo>
+

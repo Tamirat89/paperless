@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <!-- Module Category -->
+        <record id="module_overtime_category" model="ir.module.category">
+            <field name="name">Overtime</field>
+            <field name="sequence">11</field>
+        </record>
+
+        <!-- Overtime User Group -->
+        <record id="group_overtime_request_user" model="res.groups">
+            <field name="name">User</field>
+            <field name="category_id" ref="module_overtime_category"/>           
+        </record>
+
+        <!-- Overtime Department Manager Group -->
+        <record id="group_overtime_request_department_manager" model="res.groups">
+            <field name="name">Department Manager</field>
+            <field name="category_id" ref="module_overtime_category"/>
+            <field name="implied_ids" eval="[(4, ref('group_overtime_request_user'))]"/>
+        </record>
+
+        <!-- Overtime HR Manager Group -->
+        <record id="group_overtime_request_hr_manager" model="res.groups">
+            <field name="name">HR Manager</field>
+            <field name="category_id" ref="module_overtime_category"/>
+            <field name="implied_ids" eval="[(4, ref('group_overtime_request_department_manager'))]"/>
+           
+        </record>
+
+        <!-- Overtime CEO Group -->
+        <record id="group_overtime_request_ceo" model="res.groups">
+            <field name="name">CEO</field>
+            <field name="category_id" ref="module_overtime_category"/>
+            <field name="implied_ids" eval="[(4, ref('group_overtime_request_hr_manager'))]"/>
+        </record>
+
+        <!-- Overtime Super Admin Group -->
+        <record id="group_overtime_request_super_admin" model="res.groups">
+            <field name="name">Super Admin</field>
+            <field name="category_id" ref="module_overtime_category"/>
+            <field name="implied_ids" eval="[(4, ref('group_overtime_request_ceo'))]"/>
+        </record>
+    </data>
+</odoo>

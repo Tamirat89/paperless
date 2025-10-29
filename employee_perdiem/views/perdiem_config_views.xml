@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Per Diem Configuration Form View -->
+    <record id="view_perdiem_config_form" model="ir.ui.view">
+        <field name="name">perdiem.config.form</field>
+        <field name="model">perdiem.config</field>
+        <field name="arch" type="xml">
+            <form string="Per Diem Configuration">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="daily_rate"/>
+                            <field name="currency_id"/>
+                        </group>
+                        <group>
+                            <field name="active"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Per Diem Configuration List View -->
+    <record id="view_perdiem_config_list" model="ir.ui.view">
+        <field name="name">perdiem.config.list</field>
+        <field name="model">perdiem.config</field>
+        <field name="arch" type="xml">
+            <list string="Per Diem Configuration">
+                <field name="name"/>
+                <field name="daily_rate"/>
+                <field name="currency_id"/>
+                <field name="active"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Per Diem Configuration Action -->
+    <record id="action_perdiem_config" model="ir.actions.act_window">
+        <field name="name">Per Diem Configuration</field>
+        <field name="res_model">perdiem.config</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first per diem configuration!
+            </p>
+            <p>
+                Configure daily per diem rates that will be used as default values when creating per diem lines.
+            </p>
+        </field>
+    </record>
+</odoo>

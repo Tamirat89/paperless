@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- Per Diem Salary Rule -->
+    <record id="hr_salary_rule_perdiem" model="hr.salary.rule">
+        <field name="name">Per Diem Allowance</field>
+        <field name="sequence">110</field>
+        <field name="code">PERDIEM</field>
+        <field name="category_id" ref="hr_payroll_community.ALW"/>
+        <field name="condition_select">python</field>
+        <field name="condition_python">
+            <![CDATA[
+result = contract.get_perdiem_amount(payslip.date_from, payslip.date_to) != 0
+            ]]>
+        </field>
+        <field name="amount_select">code</field>
+        <field name="amount_python_compute">
+            <![CDATA[
+result = contract.get_perdiem_amount(payslip.date_from, payslip.date_to)
+            ]]>
+        </field>
+        <field name="appears_on_payslip" eval="True"/>
+    </record>
+</odoo>

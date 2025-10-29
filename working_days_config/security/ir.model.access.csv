@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_working_days_config_user,working.days.config.user,model_working_days_config,hr.group_hr_user,1,0,0,0
+access_working_days_config_manager,working.days.config.manager,model_working_days_config,hr.group_hr_manager,1,1,1,1

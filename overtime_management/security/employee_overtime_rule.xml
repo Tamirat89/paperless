@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+
+        <!-- Employee sees only their own overtime requests -->
+        <record id="rule_overtime_employee_own_requests" model="ir.rule">
+            <field name="name">Overtime: Employee Own Requests</field>
+            <field name="model_id" ref="overtime_management.model_employee_overtime"/>
+            <field name="domain_force">[('employee_id.user_id', '=', user.id), ('company_id', 'in', company_ids)]</field>
+            <field name="groups" eval="[(4, ref('overtime_management.group_overtime_request_user'))]"/>
+        </record>
+
+        <!-- Department Manager sees only their own department's requests -->
+        <record id="rule_overtime_department_manager_requests" model="ir.rule">
+            <field name="name">Overtime: Department Manager Own Department Requests</field>
+            <field name="model_id" ref="overtime_management.model_employee_overtime"/>
+            <field name="domain_force">[('employee_id.department_id', '=', user.employee_id.department_id.id), ('company_id', 'in', company_ids)]</field>
+            <field name="groups" eval="[(4, ref('overtime_management.group_overtime_request_department_manager'))]"/>
+        </record>
+
+        <!-- HR Manager sees all requests -->
+        <record id="rule_overtime_hr_manager_all" model="ir.rule">
+            <field name="name">Overtime: HR Manager All Access</field>
+            <field name="model_id" ref="overtime_management.model_employee_overtime"/>
+            <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+            <field name="groups" eval="[(4, ref('overtime_management.group_overtime_request_hr_manager'))]"/>
+        </record>
+
+        <!-- Lunch Time Configuration Rules -->
+        <!-- Users see only their company's lunch configurations -->
+        <record id="rule_lunch_config_multi_company" model="ir.rule">
+            <field name="name">Lunch Configuration: Multi-Company</field>
+            <field name="model_id" ref="overtime_management.model_lunch_time_configuration"/>
+            <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+            <field name="groups" eval="[(4, ref('overtime_management.group_overtime_request_user')), 
+                                        (4, ref('overtime_management.group_overtime_request_department_manager')), 
+                                        (4, ref('overtime_management.group_overtime_request_hr_manager')),
+                                        (4, ref('overtime_management.group_overtime_request_ceo')),
+                                        (4, ref('overtime_management.group_overtime_request_super_admin'))]"/>
+        </record>
+        
+
+      
+
+    </data>
+</odoo>

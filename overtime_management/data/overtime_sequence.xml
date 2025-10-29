@@ -1,0 +1,11 @@
+<odoo>
+    <data noupdate="1">
+        <record id="seq_employee_overtime" model="ir.sequence">
+            <field name="name">Overtime</field>
+            <field name="code">employee.overtime</field>
+            <field name="prefix">OT/%(year)s/</field>
+            <field name="padding">4</field>
+            <field name="company_id" eval="False"/>
+        </record>
+    </data>
+</odoo>

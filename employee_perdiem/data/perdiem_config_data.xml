@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Sequence for Per Diem Requests -->
+    <record id="seq_employee_perdiem" model="ir.sequence">
+        <field name="name">Employee Per Diem</field>
+        <field name="code">employee.perdiem</field>
+        <field name="prefix">PD</field>
+        <field name="padding">5</field>
+        <field name="number_next">1</field>
+        <field name="number_increment">1</field>
+    </record>
+
+    <!-- Default Per Diem Configuration -->
+    <record id="default_perdiem_config" model="perdiem.config">
+        <field name="name">Default Per Diem Rate</field>
+        <field name="daily_rate">100.0</field>
+        <field name="active">True</field>
+    </record>
+</odoo>

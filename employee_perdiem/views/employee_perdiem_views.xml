@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Employee Per Diem Form View -->
+    <record id="view_employee_perdiem_form" model="ir.ui.view">
+        <field name="name">employee.perdiem.form</field>
+        <field name="model">employee.perdiem</field>
+        <field name="arch" type="xml">
+            <form string="Employee Per Diem Request">
+                <header>
+                    <button name="action_submit" string="Submit" type="object" 
+                            class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_review" string="Review" type="object" 
+                            class="btn-secondary" invisible="state != 'submit'" 
+                            groups="employee_perdiem.group_perdiem_manager"/>
+                    <button name="action_approve" string="Approve" type="object" 
+                            class="btn-success" invisible="state != 'reviewed'" 
+                            groups="employee_perdiem.group_perdiem_manager"/>
+                    <button name="action_reset_draft" string="Reset to Draft" type="object" 
+                            class="btn-secondary" invisible="state not in ('submit', 'reviewed', 'approved')" 
+                            groups="employee_perdiem.group_perdiem_manager"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,submit,reviewed,approved"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="employee_id" readonly="state != 'draft'"/>
+                            <field name="start_date" readonly="state != 'draft'"/>
+                            <field name="end_date" readonly="state != 'draft'"/>
+                            <field name="perdiem_config_id" readonly="state != 'draft'"/>
+                        </group>
+                        <group>
+                            <field name="total_days"/>
+                            <field name="perdiem_value" readonly="state != 'draft'"/>
+                            <field name="approved_by" readonly="1"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Per Diem Lines">
+                            <field name="line_ids" readonly="state == 'approved'">
+                                <list editable="bottom" string="Daily Per Diem Lines">
+                                    <field name="date" required="1" readonly="parent.state != 'draft'"/>
+                                    <field name="daily_value" widget="monetary" readonly="1"/>
+                                </list>
+                            </field>
+                            <div class="oe_clear"/>
+                            <group class="oe_subtotal_footer oe_right">
+                                <div class="oe_subtotal_footer_separator oe_inline">
+                                    <label for="perdiem_value" string="Total Per Diem Amount"/>
+                                    <field name="perdiem_value" nolabel="1" class="oe_subtotal_footer_separator" widget="monetary"/>
+                                </div>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Employee Per Diem List View -->
+    <record id="view_employee_perdiem_list" model="ir.ui.view">
+        <field name="name">employee.perdiem.list</field>
+        <field name="model">employee.perdiem</field>
+        <field name="arch" type="xml">
+            <list string="Employee Per Diem Requests" 
+                  decoration-info="state == 'draft'" 
+                  decoration-warning="state == 'submit'" 
+                  decoration-primary="state == 'reviewed'" 
+                  decoration-success="state == 'approved'">
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="start_date"/>
+                <field name="end_date"/>
+                <field name="total_days"/>
+                <field name="perdiem_value"/>
+                <field name="state" widget="badge" 
+                       decoration-info="state == 'draft'" 
+                       decoration-warning="state == 'submit'" 
+                       decoration-primary="state == 'reviewed'" 
+                       decoration-success="state == 'approved'"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Employee Per Diem Search View -->
+    <record id="view_employee_perdiem_search" model="ir.ui.view">
+        <field name="name">employee.perdiem.search</field>
+        <field name="model">employee.perdiem</field>
+        <field name="arch" type="xml">
+            <search string="Per Diem Requests">
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="start_date"/>
+                <field name="end_date"/>
+                <filter string="My Requests" name="my_requests" 
+                        domain="[('employee_id.user_id', '=', uid)]"/>
+                <separator/>
+                <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Submitted" name="submitted" domain="[('state', '=', 'submit')]"/>
+                <filter string="Reviewed" name="reviewed" domain="[('state', '=', 'reviewed')]"/>
+                <filter string="Approved" name="approved" domain="[('state', '=', 'approved')]"/>
+                <separator/>
+                <group expand="0" string="Group By">
+                    <filter string="Employee" name="group_employee" context="{'group_by': 'employee_id'}"/>
+                    <filter string="Status" name="group_state" context="{'group_by': 'state'}"/>
+                    <filter string="Start Date" name="group_start_date" context="{'group_by': 'start_date'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Employee Per Diem Line Form View -->
+    <record id="view_employee_perdiem_line_form" model="ir.ui.view">
+        <field name="name">employee.perdiem.line.form</field>
+        <field name="model">employee.perdiem.line</field>
+        <field name="arch" type="xml">
+            <form string="Per Diem Line">
+                <sheet>
+                    <group>
+                        <field name="perdiem_id"/>
+                        <field name="date"/>
+                        <field name="daily_value"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Employee Per Diem Action -->
+    <record id="action_employee_perdiem" model="ir.actions.act_window">
+        <field name="name">Per Diem Requests</field>
+        <field name="res_model">employee.perdiem</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_employee_perdiem_search"/>
+        <field name="context">{'search_default_my_requests': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first per diem request!
+            </p>
+            <p>
+                Per diem requests allow employees to claim daily allowances for business trips or work assignments.
+                Simply select the date range and the system will automatically generate daily lines with configured rates.
+            </p>
+        </field>
+    </record>
+
+    <!-- Manager Action for All Requests -->
+    <record id="action_employee_perdiem_manager" model="ir.actions.act_window">
+        <field name="name">All Per Diem Requests</field>
+        <field name="res_model">employee.perdiem</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_employee_perdiem_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No per diem requests found!
+            </p>
+            <p>
+                Review and approve per diem requests from all employees.
+            </p>
+        </field>
+    </record>
+
+    <!-- Main Root Menu with Icon (like overtime_management) -->
+    <menuitem id="menu_perdiem_root" 
+              name="Per Diem" 
+              groups="employee_perdiem.group_perdiem_user"
+              web_icon="employee_perdiem,static/description/icon4.png"
+              sequence="25"/>
+
+    <!-- Per Diem Requests Menu -->
+    <menuitem id="menu_perdiem_requests" 
+              name="Per Diem Requests" 
+              parent="menu_perdiem_root" 
+              action="action_employee_perdiem" 
+              sequence="10"/>
+
+    <!-- Manager View for All Requests -->
+    <menuitem id="menu_all_perdiem_requests" 
+              name="All Per Diem Requests" 
+              parent="menu_perdiem_root" 
+              action="action_employee_perdiem_manager" 
+              groups="employee_perdiem.group_perdiem_manager" 
+              sequence="20"/>
+
+    <!-- Configuration Menu -->
+    <menuitem id="menu_perdiem_config" 
+              name="Per Diem Configuration" 
+              parent="menu_perdiem_root" 
+              action="action_perdiem_config" 
+              groups="employee_perdiem.group_perdiem_manager" 
+              sequence="90"/>
+</odoo>

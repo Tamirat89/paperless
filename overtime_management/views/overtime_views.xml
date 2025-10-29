@@ -1,0 +1,158 @@
+<odoo>
+     <record id="view_overtime_form" model="ir.ui.view">
+        <field name="name">employee.overtime.form</field>
+        <field name="model">employee.overtime</field>
+        <field name="arch" type="xml">
+            <form string="Overtime Request">
+                <header>
+                   
+                    <button name="action_submit" 
+                            string="Submit" 
+                            type="object" 
+                            class="btn-primary"
+                            groups="overtime_management.group_overtime_request_user"
+                            invisible="state != 'draft'"/>
+
+                   
+                    <button name="action_approve_department" 
+                            string="Approve" 
+                            type="object" 
+                            class="btn-success"
+                            groups="overtime_management.group_overtime_request_department_manager"
+                            invisible="state != 'submit'"/>
+
+                    <button name="action_approve_hr" 
+                            string="HR Approve" 
+                            type="object" 
+                            class="btn-success"
+                            groups="overtime_management.group_overtime_request_hr_manager"
+                            invisible="state != 'dept_approved'"/>
+                                  
+                    <!-- Department Manager Buttons - Only visible in submit state -->
+                    <button name="action_reject"
+                            string="Reject"
+                            type="object"
+                            class="btn-danger"
+                            groups="overtime_management.group_overtime_request_department_manager"
+                            invisible="state != 'submit'"/>
+                    <button name="action_reset_to_draft"
+                            string="Reset to Draft"
+                            type="object"
+                            class="btn-warning"
+                            groups="overtime_management.group_overtime_request_department_manager"
+                            invisible="state != 'submit'"/>
+
+                    <!-- HR Manager Buttons - Only visible in dept_approved state -->
+                    <button name="action_reject"
+                            string="Reject"
+                            type="object"
+                            class="btn-danger"
+                            groups="overtime_management.group_overtime_request_hr_manager"
+                            invisible="state != 'dept_approved'"/>
+                    <button name="action_reset_to_draft"
+                            string="Reset to Draft"
+                            type="object"
+                            class="btn-warning"
+                            groups="overtime_management.group_overtime_request_hr_manager"
+                            invisible="state != 'dept_approved'"/>
+
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,submit,dept_approved,hr_approved,rejected"/>
+                           
+                </header>
+
+
+
+                <sheet>
+                    <div class="o_form_sheet_bg">
+                        <h1>
+                            <field name="name" class="o_inline_display"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+
+                            
+                            <field name="employee_id" 
+                                    
+                                     readonly ="state not in ['draft']" options="{'no_create': True}"/>
+
+                            <field name="department_id"/>
+                            <field name="start_datetime"
+                                    readonly ="state not in ['draft']"/>
+
+                            <field name="end_datetime"
+                                    
+                                     readonly ="state not in ['draft']"/>
+                            <field name="company_id"/>
+                            
+                        </group>
+                        <group>
+
+                            <field name="overtime_type_id"
+                                     readonly ="state not in ['draft']" options="{'no_create': True}"/>
+
+                            <field name="worked_hours" readonly="1"/>
+                            <field name="lunch_hours_deducted" readonly="1" widget="float_time"/>
+                            
+                            <field name="amount_birr" readonly="1"/>
+                            <field name="reason" widget="html"  readonly ="state not in ['draft']"/>
+                        </group>                       
+                    </group>
+             
+                </sheet>
+
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_overtime_tree" model="ir.ui.view">
+        <field name="name">employee.overtime.tree</field>
+        <field name="model">employee.overtime</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="department_id"/>
+                <field name="company_id"/>
+                <field name="start_datetime"/>
+                <field name="end_datetime"/>
+                <field name="overtime_type_id"/>
+                <field name="worked_hours"/>
+                <field name="amount_birr"/>
+                <field name="state" widget="badge" 
+                       decoration-danger="state == 'rejected'" 
+                       decoration-warning="state == 'draft'" 
+                       decoration-info="state == 'submit'" 
+                       decoration-primary="state == 'dept_approved'" 
+                       decoration-success="state == 'hr_approved'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_hr_overtime" model="ir.actions.act_window">
+        <field name="name">Overtime</field>
+        <field name="res_model">employee.overtime</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_overtime_tree"/>
+    </record>
+
+    <!-- Menu for access -->
+    <menuitem id="menu_hr_overtime_root"
+              name="Overtime" 
+              groups="overtime_management.group_overtime_request_user"
+              web_icon="overtime_management,static/description/icon.png"
+              sequence="20"/>         
+              
+
+    <menuitem id="menu_hr_overtime_main_menu"
+              name="Overtime Requests"
+              parent="menu_hr_overtime_root"
+              action="action_hr_overtime"
+              sequence="1"/>
+    
+    
+   
+               
+</odoo>

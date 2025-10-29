@@ -1,0 +1,107 @@
+<odoo>
+    <record id="view_overtime_type_form" model="ir.ui.view">
+        <field name="name">overtime.type.form</field>
+        <field name="model">overtime.type</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                   
+                    <button name="action_approve" type="object" class="oe_stat_button" icon="fa-check" string="Approve" groups="overtime_management.group_overtime_request_super_admin" invisible="state != 'draft'"/>
+                    <button name="action_reject" type="object" class="oe_stat_button" icon="fa-times" string="Reject" groups="overtime_management.group_overtime_request_super_admin" invisible="state != 'draft'"/>
+                    <button name="action_reset" type="object" class="oe_stat_button" icon="fa-times" string="Reset" groups="overtime_management.group_overtime_request_super_admin" invisible="state != 'approved'"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,approved,rejected,reset"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <widget name="web_ribbon" title="Archived" bg_color="bg-danger" invisible="active"/>
+                        <field name="active" invisible="1"/>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="name" readonly="state != 'draft'"/>
+                            <field name="multiplier" readonly="state != 'draft'"/>
+                        </group>
+                        <group>
+                            <field name="company_id" readonly="1"/>
+                        </group>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+     <record id="view_overtime_type_tree" model="ir.ui.view">
+        <field name="name">overtime.type.tree</field>
+        <field name="model">overtime.type</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="multiplier"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="active" invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- <record id="view_workingday_config_form" model="ir.ui.view">
+        <field name="name">workingday.config.form</field>
+        <field name="model">workingday.config</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group> 
+                        <field name="name"/>
+                        <field name="value"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_workingday_config_tree" model="ir.ui.view">
+
+        <field name="name">workingday.config.tree</field>
+        <field name="model">workingday.config</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="value"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_hr_workingday_config" model="ir.actions.act_window">
+        <field name="name">Workingday Config</field>
+        <field name="res_model">workingday.config</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_workingday_config_tree"/>
+    </record> -->
+
+     <!-- ✅ Action to open the view -->
+    <record id="action_hr_overtime_types" model="ir.actions.act_window">
+        <field name="name">Overtime</field>
+        <field name="res_model">overtime.type</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_overtime_type_tree"/>
+    </record>
+
+    <!-- Menu for access -->
+    <menuitem id="menu_hr_overtime_type_root"
+              name="Overtime Type"
+              parent="overtime_management.menu_hr_overtime_root"
+              groups="hr.group_hr_manager"
+              action="action_hr_overtime_types"
+              sequence="2"/>
+
+    <!-- <menuitem id="menu_hr_workingday_config"
+              name="Workingday Config"
+              parent="overtime_management.menu_hr_overtime_root"
+              groups="hr.group_hr_manager"
+              action="action_hr_workingday_config"
+              sequence="3"/> -->
+
+   
+    
+</odoo>

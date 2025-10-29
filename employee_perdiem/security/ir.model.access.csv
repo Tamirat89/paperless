@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_employee_perdiem_user,employee.perdiem.user,model_employee_perdiem,group_perdiem_user,1,1,1,1
+access_employee_perdiem_manager,employee.perdiem.manager,model_employee_perdiem,group_perdiem_manager,1,1,1,1
+access_employee_perdiem_line_user,employee.perdiem.line.user,model_employee_perdiem_line,group_perdiem_user,1,1,1,1
+access_employee_perdiem_line_manager,employee.perdiem.line.manager,model_employee_perdiem_line,group_perdiem_manager,1,1,1,1
+access_perdiem_config_manager,perdiem.config.manager,model_perdiem_config,group_perdiem_manager,1,1,1,1
