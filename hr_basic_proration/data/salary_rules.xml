@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Salary Rule Categories -->
+        <record id="TTI" model="hr.salary.rule.category">
+            <field name="name">Taxable Income</field>
+            <field name="code">TTI</field>
+        </record>
+        
+        <record id="TD" model="hr.salary.rule.category">
+            <field name="name">Total Deduction</field>
+            <field name="code">TD</field>
+        </record>
+
+        <!-- Prorated Basic Salary Rule -->
+        <record id="hr_rule_basic_prorated" model="hr.salary.rule">
+            <field name="name">Basic Salary</field>
+            <field name="sequence" eval="1"/>
+            <field name="code">BASIC</field>
+            <field name="category_id" ref="hr_payroll_community.BASIC"/>
+            <field name="condition_select">none</field>
+            <field name="amount_select">code</field>
+            <field name="amount_python_compute">
+                <![CDATA[
+# Use the prorated basic salary calculation that excludes Sundays
+result = contract._prorated_basic(payslip.date_from, payslip.date_to)
+                ]]>
+            </field>
+            <field name="appears_on_payslip" eval="True"/>
+            <field name="active" eval="True"/>
+        </record>
+
+        <!-- Gross Salary Rule -->
+        <record id="hr_rule_gross" model="hr.salary.rule">
+            <field name="name">Gross Salary</field>
+            <field name="sequence" eval="450"/>
+            <field name="code">GROSS</field>
+            <field name="category_id" ref="hr_payroll_community.GROSS"/>
+            <field name="condition_select">none</field>
+            <field name="amount_select">code</field>
+            <field name="amount_python_compute">
+                <![CDATA[
+# Gross = Basic + Allowances + Travel
+result = categories.BASIC + categories.ALW + categories.Travel
+                ]]>
+            </field>
+            <field name="appears_on_payslip" eval="True"/>
+            <field name="active" eval="True"/>
+        </record>
+
+        <!-- Taxable Income Rule -->
+        <record id="hr_rule_taxable_income" model="hr.salary.rule">
+            <field name="name">Total Taxable Income</field>
+            <field name="sequence" eval="460"/>
+            <field name="code">TTI</field>
+            <field name="category_id" ref="TTI"/>
+            <field name="condition_select">none</field>
+            <field name="amount_select">code</field>
+            <field name="amount_python_compute">
+                <![CDATA[
+# Total Taxable Income = Basic + Allowances (Travel allowance is not taxable)
+result = categories.BASIC + categories.ALW
+                ]]>
+            </field>
+            <field name="appears_on_payslip" eval="True"/>
+            <field name="active" eval="True"/>
+        </record>
+
+        <!-- Income Tax Rule -->
+        <record id="hr_rule_income_tax" model="hr.salary.rule">
+            <field name="name">Income Tax</field>
+            <field name="sequence" eval="470"/>
+            <field name="code">INCOME_TAX</field>
+            <field name="category_id" ref="hr_payroll_community.DED"/>
+            <field name="condition_select">none</field>
+            <field name="amount_select">code</field>
+            <field name="amount_python_compute">
+                <![CDATA[
+# Calculate Ethiopian Income Tax using Total Taxable Income
+tti = categories.TTI
+
+# Ethiopian income tax brackets
+if tti <= 2000:
+    tax = 0.0
+elif tti <= 4000:
+    tax = (tti * 0.15) - 300
+elif tti <= 7000:
+    tax = (tti * 0.20) - 500
+elif tti <= 10000:
+    tax = (tti * 0.25) - 850
+elif tti <= 14000:
+    tax = (tti * 0.30) - 1350
+else:
+    tax = (tti * 0.35) - 2050
+
+result = -max(tax, 0.0)  # Negative because it's a deduction
+                ]]>
+            </field>
+            <field name="appears_on_payslip" eval="True"/>
+            <field name="active" eval="True"/>
+        </record>
+
+        <!-- Employer Pension Contribution Rule -->
+        <record id="hr_rule_employer_pension" model="hr.salary.rule">
+            <field name="name">Employer Pension Contribution</field>
+            <field name="sequence" eval="486"/>
+            <field name="code">EMP_PENSION</field>
+            <field name="category_id" ref="hr_payroll_community.COMP"/>
+            <field name="condition_select">none</field>
+            <field name="amount_select">code</field>
+            <field name="amount_python_compute">
+                <![CDATA[
+# Employer Pension Contribution = Basic Salary * 11%
+result = categories.BASIC * 0.11  # Positive number
+                ]]>
+            </field>
+            <field name="appears_on_payslip" eval="True"/>
+            <field name="active" eval="True"/>
+        </record>
+
+        <!-- Employee Pension Contribution Rule -->
+        <record id="hr_rule_employee_pension" model="hr.salary.rule">
+            <field name="name">Employee Pension Contribution</field>
+            <field name="sequence" eval="485"/>
+            <field name="code">EE_PENSION</field>
+            <field name="category_id" ref="hr_payroll_community.DED"/>
+            <field name="condition_select">none</field>
+            <field name="amount_select">code</field>
+            <field name="amount_python_compute">
+                <![CDATA[
+# Employee Pension Contribution = Basic Salary * 7%
+result = categories.BASIC * 0.07  # Positive number
+                ]]>
+            </field>
+            <field name="appears_on_payslip" eval="True"/>
+            <field name="active" eval="True"/>
+        </record>
+
+        <!-- Total Deduction Rule -->
+        <record id="hr_rule_total_deduction" model="hr.salary.rule">
+            <field name="name">Total Deductions</field>
+            <field name="sequence" eval="495"/>
+            <field name="code">TD</field>
+            <field name="category_id" ref="TD"/>
+            <field name="condition_select">none</field>
+            <field name="amount_select">code</field>
+            <field name="amount_python_compute">
+                <![CDATA[
+# Total Deductions = Sum of all deduction categories (as positive number)
+result = abs(categories.DED)
+                ]]>
+            </field>
+            <field name="appears_on_payslip" eval="True"/>
+            <field name="active" eval="True"/>
+        </record>
+
+        <!-- Net Salary Rule -->
+        <record id="hr_rule_net_salary" model="hr.salary.rule">
+            <field name="name">Net Salary</field>
+            <field name="sequence" eval="600"/>
+            <field name="code">NET</field>
+            <field name="category_id" ref="hr_payroll_community.NET"/>
+            <field name="condition_select">none</field>
+            <field name="amount_select">code</field>
+            <field name="amount_python_compute">
+                <![CDATA[
+# Net Salary = Gross - Total Deductions
+result = categories.GROSS - categories.TD
+                ]]>
+            </field>
+            <field name="appears_on_payslip" eval="True"/>
+            <field name="active" eval="True"/>
+        </record>
+
+        <!-- Complete Prorated Salary Structure -->
+        <record id="structure_prorated_complete" model="hr.payroll.structure">
+            <field name="code">PRORATED_COMPLETE</field>
+            <field name="name">Complete Prorated Salary Structure</field>
+            <field name="rule_ids" eval="[(6, 0, [
+                ref('hr_rule_basic_prorated'),
+                ref('hr_rule_gross'),
+                ref('hr_rule_taxable_income'),
+                ref('hr_rule_income_tax'),
+                ref('hr_rule_employer_pension'),
+                ref('hr_rule_employee_pension'),
+                ref('hr_rule_total_deduction'),
+                ref('hr_rule_net_salary')
+            ])]"/>
+            <field name="company_id" ref="base.main_company"/>
+        </record>
+    </data>
+</odoo>
