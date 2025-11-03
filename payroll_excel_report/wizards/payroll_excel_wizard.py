@@ -88,31 +88,31 @@ class PayrollExcelWizard(models.TransientModel):
         sheet.set_column('B:B', 25)
         sheet.set_column('C:C', 15)
         sheet.set_column('D:D', 20)
-        sheet.set_column('E:P', 13)
+        sheet.set_column('E:Q', 13)
 
         # Title (row 0)
-        sheet.merge_range('A1:P1', f'{company.name}', title_fmt)
+        sheet.merge_range('A1:Q1', f'{company.name}', title_fmt)
         
         # Batch info (row 1)
-        sheet.merge_range('A2:P2', f'Payroll Report - {batch.name}', info_fmt)
+        sheet.merge_range('A2:Q2', f'Payroll Report - {batch.name}', info_fmt)
         
         # Date range (row 2)
         date_from = batch.date_start.strftime('%d/%m/%Y') if batch.date_start else ''
         date_to = batch.date_end.strftime('%d/%m/%Y') if batch.date_end else ''
-        sheet.merge_range('A3:P3', f'Period: {date_from} - {date_to}', info_fmt)
+        sheet.merge_range('A3:Q3', f'Period: {date_from} - {date_to}', info_fmt)
         
         # Column Headers (row 4)
-        cols = ['No', 'Employee', 'ID', 'Bank Account', 'Days', 'Basic', 'Overtime', 'Per Diem', 'Loan',
-                'Gross', 'TTI', 'Tax', 'EE Pension', 'ER Pension', 'Total Ded', 'Net']
+        cols = ['No', 'Employee', 'ID', 'Bank Account', 'Days', 'Basic Salary', 'Earning Salary', 
+                'Overtime', 'Per Diem', 'Gross', 'TTI', 'Tax', 'EE Pension', 'ER Pension', 'Loan', 'Total Ded', 'Net']
         
         for i, col in enumerate(cols):
             sheet.write(4, i, col, hdr)
 
         # Initialize totals
         totals = {
-            'days': 0, 'basic': 0, 'ot': 0, 'pd': 0, 'loan': 0,
+            'days': 0, 'basic': 0, 'earning': 0, 'ot': 0, 'pd': 0,
             'gross': 0, 'tti': 0, 'tax': 0,
-            'ee_pen': 0, 'er_pen': 0, 'td': 0, 'net': 0
+            'ee_pen': 0, 'er_pen': 0, 'loan': 0, 'td': 0, 'net': 0
         }
         
         # Data rows (start after header rows)
@@ -134,16 +134,19 @@ class PayrollExcelWizard(models.TransientModel):
                 days = payslip.contract_id._count_working_days_excluding_sunday(
                     payslip.date_from, payslip.date_to)
             
+            # Get contract wage (basic salary)
+            basic_salary = payslip.contract_id.wage if payslip.contract_id else 0.0
+            
             # Salary rules
-            basic = get_rule('BASIC')
+            earning = get_rule('BASIC')  # Prorated earning
             ot = get_rule('OVERTIME')
             pd = get_rule('PERDIEM')
-            loan = abs(get_rule('LOAN'))
             gross = get_rule('GROSS')
             tti = get_rule('TTI')
             tax = abs(get_rule('INCOME_TAX'))
             ee_pen = get_rule('EE_PENSION')
             er_pen = get_rule('EMP_PENSION')
+            loan = abs(get_rule('LOAN'))
             td = get_rule('TD')
             net = get_rule('NET')
             
@@ -153,29 +156,31 @@ class PayrollExcelWizard(models.TransientModel):
             sheet.write(row, 2, emp_id, cell)
             sheet.write(row, 3, bank, cell)
             sheet.write(row, 4, days, num)
-            sheet.write(row, 5, basic, num)
-            sheet.write(row, 6, ot, num)
-            sheet.write(row, 7, pd, num)
-            sheet.write(row, 8, loan, num)
+            sheet.write(row, 5, basic_salary, num)
+            sheet.write(row, 6, earning, num)
+            sheet.write(row, 7, ot, num)
+            sheet.write(row, 8, pd, num)
             sheet.write(row, 9, gross, num)
             sheet.write(row, 10, tti, num)
             sheet.write(row, 11, tax, num)
             sheet.write(row, 12, ee_pen, num)
             sheet.write(row, 13, er_pen, num)
-            sheet.write(row, 14, td, num)
-            sheet.write(row, 15, net, num)
+            sheet.write(row, 14, loan, num)
+            sheet.write(row, 15, td, num)
+            sheet.write(row, 16, net, num)
             
             # Add to totals
             totals['days'] += days
-            totals['basic'] += basic
+            totals['basic'] += basic_salary
+            totals['earning'] += earning
             totals['ot'] += ot
             totals['pd'] += pd
-            totals['loan'] += loan
             totals['gross'] += gross
             totals['tti'] += tti
             totals['tax'] += tax
             totals['ee_pen'] += ee_pen
             totals['er_pen'] += er_pen
+            totals['loan'] += loan
             totals['td'] += td
             totals['net'] += net
             
@@ -186,16 +191,17 @@ class PayrollExcelWizard(models.TransientModel):
         sheet.merge_range(row, 0, row, 3, 'TOTAL', total_label_fmt)
         sheet.write(row, 4, totals['days'], total_fmt)
         sheet.write(row, 5, totals['basic'], total_fmt)
-        sheet.write(row, 6, totals['ot'], total_fmt)
-        sheet.write(row, 7, totals['pd'], total_fmt)
-        sheet.write(row, 8, totals['loan'], total_fmt)
+        sheet.write(row, 6, totals['earning'], total_fmt)
+        sheet.write(row, 7, totals['ot'], total_fmt)
+        sheet.write(row, 8, totals['pd'], total_fmt)
         sheet.write(row, 9, totals['gross'], total_fmt)
         sheet.write(row, 10, totals['tti'], total_fmt)
         sheet.write(row, 11, totals['tax'], total_fmt)
         sheet.write(row, 12, totals['ee_pen'], total_fmt)
         sheet.write(row, 13, totals['er_pen'], total_fmt)
-        sheet.write(row, 14, totals['td'], total_fmt)
-        sheet.write(row, 15, totals['net'], total_fmt)
+        sheet.write(row, 14, totals['loan'], total_fmt)
+        sheet.write(row, 15, totals['td'], total_fmt)
+        sheet.write(row, 16, totals['net'], total_fmt)
 
         workbook.close()
         output.seek(0)

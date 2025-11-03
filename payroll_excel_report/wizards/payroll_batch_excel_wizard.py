@@ -195,19 +195,21 @@ class PayrollBatchExcelWizard(models.TransientModel):
             department_payslips[department].append(payslip)
             
             # Collect all payslip data
+            contract_wage = payslip.contract_id.wage if payslip.contract_id else 0.0
             payslip_data = {
                 'employee': employee,
                 'payslip': payslip,
                 'days_worked': self._calculate_working_days(employee, payslip.date_from, payslip.date_to),
-                'basic_salary': payslip.line_ids.filtered(lambda l: l.code == 'BASIC').amount or 0.0,
+                'basic_salary': contract_wage,
+                'earning_salary': payslip.line_ids.filtered(lambda l: l.code == 'BASIC').amount or 0.0,
                 'overtime': payslip.line_ids.filtered(lambda l: l.code == 'OVERTIME').amount or 0.0,
                 'per_diem': payslip.line_ids.filtered(lambda l: l.code == 'PERDIEM').amount or 0.0,
-                'loan': abs(payslip.line_ids.filtered(lambda l: l.code == 'LOAN').amount or 0.0),
                 'gross': payslip.line_ids.filtered(lambda l: l.code == 'GROSS').amount or 0.0,
                 'tti': payslip.line_ids.filtered(lambda l: l.code == 'TTI').amount or 0.0,
                 'income_tax': abs(payslip.line_ids.filtered(lambda l: l.code == 'INCOME_TAX').amount or 0.0),
                 'ee_pension': payslip.line_ids.filtered(lambda l: l.code == 'EE_PENSION').amount or 0.0,
                 'er_pension': payslip.line_ids.filtered(lambda l: l.code == 'EMP_PENSION').amount or 0.0,
+                'loan': abs(payslip.line_ids.filtered(lambda l: l.code == 'LOAN').amount or 0.0),
                 'total_deduction': payslip.line_ids.filtered(lambda l: l.code == 'TD').amount or 0.0,
                 'net_pay': payslip.line_ids.filtered(lambda l: l.code == 'NET').amount or 0.0,
             }
@@ -219,14 +221,15 @@ class PayrollBatchExcelWizard(models.TransientModel):
             ('Employee Name', 'name'),
             ('Days Worked', 'days_worked'),
             ('Basic Salary', 'basic_salary'),
+            ('Earning Salary', 'earning_salary'),
             ('Overtime', 'overtime'),
             ('Per Diem', 'per_diem'),
-            ('Loan Deduction', 'loan'),
-            ('Gross Salary', 'gross'),
+            ('Gross', 'gross'),
             ('Taxable Income (TTI)', 'tti'),
             ('Income Tax', 'income_tax'),
             ('Employee Pension (7%)', 'ee_pension'),
             ('Employer Pension (11%)', 'er_pension'),
+            ('Loan', 'loan'),
             ('Total Deductions', 'total_deduction'),
             ('Net Salary', 'net_pay'),
             ('Bank Account', 'account_number'),
