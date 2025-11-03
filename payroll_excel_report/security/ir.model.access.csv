@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_payroll_excel_wizard,access_payroll_excel_wizard,model_payroll_excel_wizard,hr_payroll_community.group_hr_payroll_community_user,1,1,1,1
+access_payroll_batch_excel_wizard,access_payroll_batch_excel_wizard,model_payroll_batch_excel_wizard,hr_payroll_community.group_hr_payroll_community_user,1,1,1,1
+
