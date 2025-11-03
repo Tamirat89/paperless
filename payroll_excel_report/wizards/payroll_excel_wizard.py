@@ -88,21 +88,21 @@ class PayrollExcelWizard(models.TransientModel):
         sheet.set_column('B:B', 25)
         sheet.set_column('C:C', 15)
         sheet.set_column('D:D', 20)
-        sheet.set_column('E:O', 13)
+        sheet.set_column('E:P', 13)
 
         # Title (row 0)
-        sheet.merge_range('A1:O1', f'{company.name}', title_fmt)
+        sheet.merge_range('A1:P1', f'{company.name}', title_fmt)
         
         # Batch info (row 1)
-        sheet.merge_range('A2:O2', f'Payroll Report - {batch.name}', info_fmt)
+        sheet.merge_range('A2:P2', f'Payroll Report - {batch.name}', info_fmt)
         
         # Date range (row 2)
         date_from = batch.date_start.strftime('%d/%m/%Y') if batch.date_start else ''
         date_to = batch.date_end.strftime('%d/%m/%Y') if batch.date_end else ''
-        sheet.merge_range('A3:O3', f'Period: {date_from} - {date_to}', info_fmt)
+        sheet.merge_range('A3:P3', f'Period: {date_from} - {date_to}', info_fmt)
         
         # Column Headers (row 4)
-        cols = ['No', 'Employee', 'ID', 'Bank Account', 'Days', 'Basic', 'Overtime', 'Per Diem', 
+        cols = ['No', 'Employee', 'ID', 'Bank Account', 'Days', 'Basic', 'Overtime', 'Per Diem', 'Loan',
                 'Gross', 'TTI', 'Tax', 'EE Pension', 'ER Pension', 'Total Ded', 'Net']
         
         for i, col in enumerate(cols):
@@ -110,7 +110,7 @@ class PayrollExcelWizard(models.TransientModel):
 
         # Initialize totals
         totals = {
-            'days': 0, 'basic': 0, 'ot': 0, 'pd': 0,
+            'days': 0, 'basic': 0, 'ot': 0, 'pd': 0, 'loan': 0,
             'gross': 0, 'tti': 0, 'tax': 0,
             'ee_pen': 0, 'er_pen': 0, 'td': 0, 'net': 0
         }
@@ -138,6 +138,7 @@ class PayrollExcelWizard(models.TransientModel):
             basic = get_rule('BASIC')
             ot = get_rule('OVERTIME')
             pd = get_rule('PERDIEM')
+            loan = abs(get_rule('LOAN'))
             gross = get_rule('GROSS')
             tti = get_rule('TTI')
             tax = abs(get_rule('INCOME_TAX'))
@@ -155,19 +156,21 @@ class PayrollExcelWizard(models.TransientModel):
             sheet.write(row, 5, basic, num)
             sheet.write(row, 6, ot, num)
             sheet.write(row, 7, pd, num)
-            sheet.write(row, 8, gross, num)
-            sheet.write(row, 9, tti, num)
-            sheet.write(row, 10, tax, num)
-            sheet.write(row, 11, ee_pen, num)
-            sheet.write(row, 12, er_pen, num)
-            sheet.write(row, 13, td, num)
-            sheet.write(row, 14, net, num)
+            sheet.write(row, 8, loan, num)
+            sheet.write(row, 9, gross, num)
+            sheet.write(row, 10, tti, num)
+            sheet.write(row, 11, tax, num)
+            sheet.write(row, 12, ee_pen, num)
+            sheet.write(row, 13, er_pen, num)
+            sheet.write(row, 14, td, num)
+            sheet.write(row, 15, net, num)
             
             # Add to totals
             totals['days'] += days
             totals['basic'] += basic
             totals['ot'] += ot
             totals['pd'] += pd
+            totals['loan'] += loan
             totals['gross'] += gross
             totals['tti'] += tti
             totals['tax'] += tax
@@ -185,13 +188,14 @@ class PayrollExcelWizard(models.TransientModel):
         sheet.write(row, 5, totals['basic'], total_fmt)
         sheet.write(row, 6, totals['ot'], total_fmt)
         sheet.write(row, 7, totals['pd'], total_fmt)
-        sheet.write(row, 8, totals['gross'], total_fmt)
-        sheet.write(row, 9, totals['tti'], total_fmt)
-        sheet.write(row, 10, totals['tax'], total_fmt)
-        sheet.write(row, 11, totals['ee_pen'], total_fmt)
-        sheet.write(row, 12, totals['er_pen'], total_fmt)
-        sheet.write(row, 13, totals['td'], total_fmt)
-        sheet.write(row, 14, totals['net'], total_fmt)
+        sheet.write(row, 8, totals['loan'], total_fmt)
+        sheet.write(row, 9, totals['gross'], total_fmt)
+        sheet.write(row, 10, totals['tti'], total_fmt)
+        sheet.write(row, 11, totals['tax'], total_fmt)
+        sheet.write(row, 12, totals['ee_pen'], total_fmt)
+        sheet.write(row, 13, totals['er_pen'], total_fmt)
+        sheet.write(row, 14, totals['td'], total_fmt)
+        sheet.write(row, 15, totals['net'], total_fmt)
 
         workbook.close()
         output.seek(0)
