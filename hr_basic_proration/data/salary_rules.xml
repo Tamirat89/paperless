@@ -20,12 +20,7 @@
             <field name="category_id" ref="hr_payroll_community.BASIC"/>
             <field name="condition_select">none</field>
             <field name="amount_select">code</field>
-            <field name="amount_python_compute">
-                <![CDATA[
-# Use the prorated basic salary calculation that excludes Sundays
-result = contract._prorated_basic(payslip.date_from, payslip.date_to)
-                ]]>
-            </field>
+            <field name="amount_python_compute">result = contract._prorated_basic(payslip.date_from, payslip.date_to)</field>
             <field name="appears_on_payslip" eval="True"/>
             <field name="active" eval="True"/>
         </record>
@@ -38,12 +33,7 @@ result = contract._prorated_basic(payslip.date_from, payslip.date_to)
             <field name="category_id" ref="hr_payroll_community.GROSS"/>
             <field name="condition_select">none</field>
             <field name="amount_select">code</field>
-            <field name="amount_python_compute">
-                <![CDATA[
-# Gross = Basic + Allowances + Travel
-result = categories.BASIC + categories.ALW + categories.Travel
-                ]]>
-            </field>
+            <field name="amount_python_compute">result = categories.BASIC + categories.ALW + categories.Travel</field>
             <field name="appears_on_payslip" eval="True"/>
             <field name="active" eval="True"/>
         </record>
@@ -56,12 +46,7 @@ result = categories.BASIC + categories.ALW + categories.Travel
             <field name="category_id" ref="TTI"/>
             <field name="condition_select">none</field>
             <field name="amount_select">code</field>
-            <field name="amount_python_compute">
-                <![CDATA[
-# Total Taxable Income = Basic + Allowances (Travel allowance is not taxable)
-result = categories.BASIC + categories.ALW
-                ]]>
-            </field>
+            <field name="amount_python_compute">result = categories.BASIC + categories.ALW</field>
             <field name="appears_on_payslip" eval="True"/>
             <field name="active" eval="True"/>
         </record>
@@ -74,28 +59,9 @@ result = categories.BASIC + categories.ALW
             <field name="category_id" ref="hr_payroll_community.DED"/>
             <field name="condition_select">none</field>
             <field name="amount_select">code</field>
-            <field name="amount_python_compute">
-                <![CDATA[
-# Calculate Ethiopian Income Tax using Total Taxable Income
-tti = categories.TTI
-
-# Ethiopian income tax brackets
-if tti <= 2000:
-    tax = 0.0
-elif tti <= 4000:
-    tax = (tti * 0.15) - 300
-elif tti <= 7000:
-    tax = (tti * 0.20) - 500
-elif tti <= 10000:
-    tax = (tti * 0.25) - 850
-elif tti <= 14000:
-    tax = (tti * 0.30) - 1350
-else:
-    tax = (tti * 0.35) - 2050
-
-result = -max(tax, 0.0)  # Negative because it's a deduction
-                ]]>
-            </field>
+            <field name="amount_python_compute">tti = categories.TTI
+tax = 0.0 if tti &lt;= 2000 else (tti * 0.15 - 300) if tti &lt;= 4000 else (tti * 0.20 - 500) if tti &lt;= 7000 else (tti * 0.25 - 850) if tti &lt;= 10000 else (tti * 0.30 - 1350) if tti &lt;= 14000 else (tti * 0.35 - 2050)
+result = -max(tax, 0.0)</field>
             <field name="appears_on_payslip" eval="True"/>
             <field name="active" eval="True"/>
         </record>
@@ -108,12 +74,7 @@ result = -max(tax, 0.0)  # Negative because it's a deduction
             <field name="category_id" ref="hr_payroll_community.COMP"/>
             <field name="condition_select">none</field>
             <field name="amount_select">code</field>
-            <field name="amount_python_compute">
-                <![CDATA[
-# Employer Pension Contribution = Basic Salary * 11%
-result = categories.BASIC * 0.11  # Positive number
-                ]]>
-            </field>
+            <field name="amount_python_compute">result = categories.BASIC * 0.11</field>
             <field name="appears_on_payslip" eval="True"/>
             <field name="active" eval="True"/>
         </record>
@@ -126,12 +87,7 @@ result = categories.BASIC * 0.11  # Positive number
             <field name="category_id" ref="hr_payroll_community.DED"/>
             <field name="condition_select">none</field>
             <field name="amount_select">code</field>
-            <field name="amount_python_compute">
-                <![CDATA[
-# Employee Pension Contribution = Basic Salary * 7%
-result = categories.BASIC * 0.07  # Positive number
-                ]]>
-            </field>
+            <field name="amount_python_compute">result = categories.BASIC * 0.07</field>
             <field name="appears_on_payslip" eval="True"/>
             <field name="active" eval="True"/>
         </record>
@@ -144,12 +100,7 @@ result = categories.BASIC * 0.07  # Positive number
             <field name="category_id" ref="TD"/>
             <field name="condition_select">none</field>
             <field name="amount_select">code</field>
-            <field name="amount_python_compute">
-                <![CDATA[
-# Total Deductions = Sum of all deduction categories (as positive number)
-result = abs(categories.DED)
-                ]]>
-            </field>
+            <field name="amount_python_compute">result = abs(categories.DED)</field>
             <field name="appears_on_payslip" eval="True"/>
             <field name="active" eval="True"/>
         </record>
@@ -162,12 +113,7 @@ result = abs(categories.DED)
             <field name="category_id" ref="hr_payroll_community.NET"/>
             <field name="condition_select">none</field>
             <field name="amount_select">code</field>
-            <field name="amount_python_compute">
-                <![CDATA[
-# Net Salary = Gross - Total Deductions
-result = categories.GROSS - categories.TD
-                ]]>
-            </field>
+            <field name="amount_python_compute">result = categories.GROSS - categories.TD</field>
             <field name="appears_on_payslip" eval="True"/>
             <field name="active" eval="True"/>
         </record>
