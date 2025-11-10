@@ -46,11 +46,11 @@ class HrContract(models.Model):
         help="Defines the frequency of the wage payment.")
     hra = fields.Monetary(string='HRA', tracking=True,
                           help="House rent allowance.")
-    travel_allowance = fields.Monetary(string="Travel Allowance",
+    travel_allowance = fields.Monetary(string="Taxable Transport Allowance",
                                        help="Travel allowance")
     da = fields.Monetary(string="DA", help="Dearness allowance")
-    meal_allowance = fields.Monetary(string="Meal Allowance",
-                                     help="Meal allowance")
+    meal_allowance = fields.Monetary(string="Non-Taxable Allowance",
+                                     help="Non-Taxable allowance")
     medical_allowance = fields.Monetary(string="Medical Allowance",
                                         help="Medical allowance")
     telephone_allowance = fields.Monetary(
