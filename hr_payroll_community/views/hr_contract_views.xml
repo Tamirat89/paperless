@@ -54,6 +54,24 @@
                         <field name="medical_allowance" nolabel="1"/>
                         <span>/ month</span>
                     </div>
+                    <label for="telephone_allowance"/>
+                    <div class="o_row">
+
+                        <field name="telephone_allowance" nolabel="1"/>
+                        <span>/ month</span>
+                    </div>
+                    <label for="position_allowance"/>
+                    <div class="o_row">
+
+                        <field name="position_allowance" nolabel="1"/>
+                        <span>/ month</span>
+                    </div>
+                    <label for="site_allowance"/>
+                    <div class="o_row">
+
+                        <field name="site_allowance" nolabel="1"/>
+                        <span>/ month</span>
+                    </div>
                     <label for="other_allowance"/>
                     <div class="o_row">
 

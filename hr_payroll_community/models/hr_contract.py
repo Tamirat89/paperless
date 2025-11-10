@@ -53,6 +53,18 @@ class HrContract(models.Model):
                                      help="Meal allowance")
     medical_allowance = fields.Monetary(string="Medical Allowance",
                                         help="Medical allowance")
+    telephone_allowance = fields.Monetary(
+        string="Telephone Allowance",
+        help="Telephone allowance"
+    )
+    position_allowance = fields.Monetary(
+        string="Position Allowance",
+        help="Position allowance"
+    )
+    site_allowance = fields.Monetary(
+        string="Site Allowance",
+        help="Site allowance"
+    )
     other_allowance = fields.Monetary(string="Other Allowance",
                                       help="Other allowances")
 

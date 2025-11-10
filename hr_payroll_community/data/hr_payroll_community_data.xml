@@ -46,6 +46,18 @@
             <field name="name">Meal Allowance</field>
             <field name="code">Meal</field>
         </record>
+        <record id="Telephone" model="hr.salary.rule.category">
+            <field name="name">Telephone Allowance</field>
+            <field name="code">TLPA</field>
+        </record>
+        <record id="Position" model="hr.salary.rule.category">
+            <field name="name">Position Allowance</field>
+            <field name="code">PSA</field>
+        </record>
+        <record id="Site" model="hr.salary.rule.category">
+            <field name="name">Site Allowance</field>
+            <field name="code">STA</field>
+        </record>
         <record id="Medical" model="hr.salary.rule.category">
             <field name="name">Medical Allowance</field>
             <field name="code">Medical</field>
@@ -126,6 +138,33 @@
             <field name="condition_select">none</field>
             <field name="amount_select">code</field>
             <field name="amount_python_compute">result = contract.medical_allowance</field>
+        </record>
+        <record id="hr_rule_telephone" model="hr.salary.rule">
+            <field name="name">Telephone Allowance</field>
+            <field name="sequence" eval="1"/>
+            <field name="code">TLPA</field>
+            <field name="category_id" ref="hr_payroll_community.Telephone"/>
+            <field name="condition_select">none</field>
+            <field name="amount_select">code</field>
+            <field name="amount_python_compute">result = contract.telephone_allowance</field>
+        </record>
+        <record id="hr_rule_position" model="hr.salary.rule">
+            <field name="name">Position Allowance</field>
+            <field name="sequence" eval="1"/>
+            <field name="code">PSA</field>
+            <field name="category_id" ref="hr_payroll_community.Position"/>
+            <field name="condition_select">none</field>
+            <field name="amount_select">code</field>
+            <field name="amount_python_compute">result = contract.position_allowance</field>
+        </record>
+        <record id="hr_rule_site" model="hr.salary.rule">
+            <field name="name">Site Allowance</field>
+            <field name="sequence" eval="1"/>
+            <field name="code">STA</field>
+            <field name="category_id" ref="hr_payroll_community.Site"/>
+            <field name="condition_select">none</field>
+            <field name="amount_select">code</field>
+            <field name="amount_python_compute">result = contract.site_allowance</field>
         </record>
         <record id="hr_rule_other" model="hr.salary.rule">
             <field name="name">Other Allowance</field>
