@@ -1,0 +1,64 @@
+<odoo>
+
+     <record id="view_purchase_order_form_inherit" model="ir.ui.view">
+        <field name="name">purchase.order.form.inherit</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <!-- Add Statusbar -->
+            <xpath expr="//field[@name='partner_ref']" position="after">
+                <field name="remark" invisible="state != 'advance_payment'"/>
+            </xpath>
+
+            
+            <xpath expr="//header/field[@name='state']" position="replace">
+                <field name="state" widget="statusbar"
+                       statusbar_visible="draft,advance_payment,awaiting_delivery,credit_settlement,done"/>
+            </xpath>
+
+            <xpath expr="//notebook" position="inside">
+                <page string="Delivery Instructions">
+                    <field name="delivery_instruction_ids">
+                        <list editable="bottom">
+                            <field name="expected_date" string="Expected Date"/>
+                            <field name="quantity" string="Quantity"/>
+                            <field name="name" string="Remark"/>
+
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+
+
+            <!-- Add Procurement Type and State Fields -->
+            <field name="partner_id" position="after">
+                <field name="procurement_type" required="1"/>
+            </field>
+
+            <!-- Add Quality Inspection Fields -->
+            <xpath expr="//sheet" position="inside">
+                <group string="Quality Inspection">
+                    <field name="quality_evaluation"/>
+                    <field name="passed_evaluation"/>
+                    <field name="evaluation_remark"/>
+                </group>
+            </xpath>
+
+            <!-- Modify the Create Invoice Button Visibility -->
+            <xpath expr="//header/button[@name='action_create_invoice']" position="attributes">
+                <attribute name="invisible">state not in ('advance_payment', 'awaiting_delivery', 'credit_settlement',
+                    'purchase')
+                </attribute>
+            </xpath>
+
+
+            <!-- Add Buttons for Dynamic State Transitions -->
+            <xpath expr="//header" position="inside">
+                <button name="action_done" type="object" string="Done"
+                        class="btn-success" invisible="state != 'credit_settlement'"/>
+
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

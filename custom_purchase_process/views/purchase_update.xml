@@ -1,0 +1,916 @@
+<odoo>
+
+    <!-- Menu for Purchase Management -->
+    <menuitem id="menu_purchase_management" 
+              web_icon="afro_construction_template_ovid,static/description/cart.png" name="Purchase Request"
+              sequence="10"/>
+
+
+    <record id="view_stock_location_form_inherit_company" model="ir.ui.view">
+        <field name="name">stock.location.form.inherit.company</field>
+        <field name="model">stock.location</field>
+        <field name="inherit_id" ref="stock.view_location_form"/>
+        <field name="arch" type="xml">
+            <sheet>
+                <group>
+                    <field name="located_company_id"/>
+                </group>
+            </sheet>
+        </field>
+    </record>
+
+    <!-- Material Request Views -->
+    <record id="view_material_request_form" model="ir.ui.view">
+        <field name="name">material.request.form</field>
+        <field name="model">material.request</field>
+        <field name="arch" type="xml">
+            <form string="Material Request">
+
+                <header>
+                    <!-- Display the current state -->
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,approval_requested,approved,pr,siv,delivered,rejected"/>
+
+                    <!-- Action Buttons -->
+                    <button name="action_submit"
+                            string="Submit"
+                            type="object"
+                            class="btn-primary"    
+                            groups="custom_purchase_process.group_material_request_requestor"                        
+                            invisible="state != 'draft'"/>
+
+                    <!-- Buttons for Approver -->
+                    <button name="action_approve"
+                            string="Approve"
+                            type="object"
+                            class="btn-success"
+                            groups="custom_purchase_process.group_material_request_approver"
+                            invisible="state != 'approval_requested'"/>
+
+                    <button name="action_reject"
+                            string="Reject"
+                            type="object"
+                            class="btn-danger"
+                            groups="custom_purchase_process.group_material_request_approver"
+                            invisible="state not in ['approval_requested','approved', 'pr', 'siv']"/>
+
+                    <button name="check_stock"
+                            string="Check Availability"
+                            type="object"
+                            class="btn-primary"
+                            groups="custom_purchase_process.group_material_request_approver"
+                            invisible="state not in ['approval_requested','approved', 'pr', 'siv']"/>
+
+                    <button name="action_create_pr"
+                            string="Create PR"
+                            type="object"
+                            class="btn-info"
+                            groups="custom_purchase_process.group_material_create_purchase_request"
+                            invisible="generate_pr == False or state != 'approved'"/>
+
+                    <button name="action_create_siv"
+                            string="Create SR"
+                            type="object"
+                            class="btn-warning"
+                            groups="custom_purchase_process.group_material_create_store_request"
+                            invisible="generate_siv == False or state not in ('approved', 'pr')"/>
+
+                    <button name="action_deliver"
+                            string="Generate SIV"
+                            type="object"
+                            class="btn-success"
+                            groups="custom_purchase_process.group_material_request_approver"
+                            invisible="state != 'siv'"/>
+                </header>
+                <sheet>
+
+                    <div class="oe_button_box" name="button_box">
+                        <!-- <button type="object" name="action_view_siv"
+                                icon="fa-external-link"
+                                string="SR's"
+                                class="oe_stat_button"/> -->
+
+
+
+                        <button class="oe_stat_button" 
+                                name="action_view_siv" 
+                                type="object"
+                                icon="fa-external-link">                                            
+                                    <div class="o_stat_info">
+                                        <span class="o_stat_value">
+                                            <field name="siv_count" widget="statinfo" string="SR(s)"/>
+                                        </span>
+                                    </div>
+                        </button>
+                        
+                        <button class="oe_stat_button" 
+                                name="action_view_purchase_requests" 
+                                type="object"
+                                icon="fa-external-link">                                            
+                                    <div class="o_stat_info">
+                                        <span class="o_stat_value">
+                                            <field name="purchase_request_count" widget="statinfo" string="PR(s)"/>
+                                        </span>
+                                    </div>
+                        </button>    
+
+                    </div>
+
+
+                    
+
+                    <div class="o_form_sheet_bg">
+                        <h1>
+                            <field name="name" class="o_inline_display"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="requested_by_id" readonly="1" force_save="1"/>
+                            <field name="siv_count" invisible="1"/>
+                            <field name="purchase_request_count" invisible="1"/>
+                            <field name="approved_by_id" invisible="state == 'draft'" modifiers="{'readonly': true}"
+                                   force_save="1"/>
+                            <field name="approved_by_char" invisible="1" readonly="1" force_save="1"/>
+                            <field name="date_requested" readonly="1" force_save="1"/>
+                            <field name="date_approved" invisible="state == 'draft'" readonly="1" force_save="1"/>
+                        </group>
+                        <group>
+                            <field name="requesting_company_id"
+                                   readonly="state not in ['draft', 'approval_requested']"/>
+                            <field name="company_id"
+                                   readonly="state not in ['draft', 'approval_requested']"/>
+                            <field name="from_location_id" string="Store"
+                                   readonly="state not in ['draft', 'approval_requested','approved']"
+                                   invisible="state == 'draft'"/>
+                            <field name="picking_type_id" string="SIV Voucher" invisible="state == 'draft'"
+                                   domain="[('default_location_src_id', '=', from_location_id), ('code', '=', 'outgoing')]"
+                                   readonly="state not in ['draft', 'approval_requested','approved']"/>
+                            <field name="generate_siv" readonly="state not in ['approved', 'pr','siv']"
+                                   invisible="state in ['draft', 'approval_requested']"/>
+                            <field name="generate_pr" readonly="state not in ['approved', 'pr','siv']"
+                                   invisible="state in ['draft', 'approval_requested']"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Request Lines">
+                            <field name="material_request_line_ids">
+                                <list editable="bottom">
+                                    <field name="generate_siv" column_invisible="1"/>
+                                    <field name="generate_pr" column_invisible="1"/>
+                                    <field name="material_request_id" column_invisible="1"/>
+                                    <field name="state" column_invisible="1"/>
+                                    <field name="product_id" string="Product" readonly="state != 'draft'"
+                                           options="{'auto_width': true}"/>
+                                    <field name="requested_qty" string="Requested Quantity" readonly="state != 'draft'"
+                                           options="{'auto_width': true}"/>
+                                    <field name="available_qty" string="Available Quantity" readonly="1" force_save="1"
+                                           options="{'auto_width': true}"/>
+                                    <field name="delivered_qty" string="Delivered Quantity" readonly="1" force_save="1"
+                                           options="{'auto_width': true}"/>
+                                    <field name="pr_qty" string="PR Quantity"
+                                           readonly="state not in ['approved','pr','siv']"
+                                           options="{'auto_width': true}"/>
+                                    <field name="siv_qty" string="SIV Quantity"
+                                           readonly="state not in ['approved','pr','siv']"
+                                           options="{'auto_width': true}"/>
+                                </list>
+
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_material_request_tree" model="ir.ui.view">
+        <field name="name">material.request.tree</field>
+        <field name="model">material.request</field>
+        <field name="arch" type="xml">
+            <list default_order="name desc">
+                <field name="name"/>
+                <field name="state"/>
+                <field name="date_requested"/>
+                <field name="requested_by_char"/>
+                <field name="approved_by_char"/>
+                <field name="requesting_company_id"/>
+                <field name="company_id"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_material_request" model="ir.actions.act_window">
+        <field name="name">Material Request</field>
+        <field name="res_model">material.request</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- <menuitem id="menu_material_request" 
+              name="Material Request"
+              action="action_material_request"/> -->
+
+     <menuitem id="menu_material_request_menus" 
+              name="Material Request"
+              action="action_material_request"/>
+
+
+
+    <!-- Product SIV Views -->
+    <record id="view_product_siv_form" model="ir.ui.view">
+        <field name="name">product.siv.form</field>
+        <field name="model">product.siv</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <!-- State as a Status Bar -->
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,request_approval,approved,delivered"/>
+
+                    <!-- Buttons Based on State -->
+                    <button name="action_request_approval" string="Request Approval" type="object" class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_approve" string="Approve" type="object" class="btn-success"
+                            invisible="state != 'request_approval'"/>
+                    <button name="action_deliver" string="Deliver" type="object" class="btn-primary"
+                            invisible="state != 'approved'"/>
+                    <button name="unlink" string="Cancel" type="object" class="btn-secondary"
+                            invisible="state in ['delivered', 'cancel']"/>
+                </header>
+                <sheet>
+
+                    <div class="oe_button_box" name="button_box">
+                        <button type="object" name="action_view_moves"
+                                icon="fa-external-link"
+                                string="SIV's "
+                                class="oe_stat_button"/>
+
+                    </div>
+
+                    <div class="o_form_sheet_bg">
+                        <h1>
+                            <field name="name" class="o_inline_display"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="material_request_id" readonly="1"/>
+                            <field name="operation_type_id" readonly="1"/>
+                            <field name="state" readonly="0"/>
+                        </group>
+                        <group>
+                            <field name="requested_by" readonly="1"/>
+                            <field name="approved_by" readonly="1"/>
+                            <field name="issued_by" readonly="1"/>
+                        </group>
+                    </group>
+
+
+                    <notebook>
+                        <page string="SR Lines">
+                            <field name="product_siv_line_ids">
+                                <list editable="bottom">
+                                    <field name="product_id"/>
+                                    <field name="requested_qty"/>
+                                    <field name="issued_qty"/>
+                                </list>
+                                <form>
+                                    <group>
+                                        <field name="product_id"/>
+                                        <field name="requested_qty"/>
+                                        <field name="issued_qty"/>
+                                    </group>
+                                </form>
+                            </field>
+                        </page>
+                    </notebook>
+                    <footer>
+                        <button string="Request Approval" type="object" name="action_request_approval"
+                                class="btn-primary" modifiers="{'invisible': [('state', '!=', 'draft')]}"/>
+                        <button string="Approve" type="object" name="action_approve" class="btn-success"
+                                modifiers="{'invisible': [('state', '!=', 'request_approval')]}"/>
+                        <button string="Deliver" type="object" name="action_deliver" class="btn-primary"
+                                modifiers="{'invisible': [('state', '!=', 'approved')]}"/>
+                        <button string="Cancel" type="object" name="unlink" class="btn-secondary"
+                                modifiers="{'invisible': [('state', 'in', ['draft', 'request_approval', 'approved'])]}"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_product_siv_tree" model="ir.ui.view">
+        <field name="name">product.siv.tree</field>
+        <field name="model">product.siv</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="material_request_id"/>
+                <field name="operation_type_id"/>
+                <field name="requested_by"/>
+                <field name="approved_by"/>
+                <field name="issued_by"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+    <record id="action_product_siv" model="ir.actions.act_window">
+        <field name="name">SR</field>
+        <field name="res_model">product.siv</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_product_siv"  name="SR"
+              action="action_product_siv" web_icon="afro_construction_template_ovid,static/description/siv.png"/>
+
+
+    <record id="view_supplier_analysis_form" model="ir.ui.view">
+        <field name="name">supplier.analysis.form</field>
+        <field name="model">supplier.analysis</field>
+        <field name="arch" type="xml">
+            <form string="Supplier Analysis">
+                <header>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,in_progress,department_approved,quality_inspection,gm_approved,done"/>
+                    <button name="action_in_progress" 
+                            string="Start Progress" 
+                            type="object" 
+                            class="btn-primary"
+                            groups="custom_purchase_process.group_supplier_analysis_start_progress"
+                            invisible="state != 'draft'"/>
+                    <button name="action_department_approve" 
+                            string="Client Approved"
+                            type="object" 
+                            class="btn-info"
+                            groups="custom_purchase_process.group_supplier_analysis_client_approved"
+                            invisible="state != 'in_progress'"/>
+                    <button name="action_gm_approve" 
+                            string="GM Approve" 
+                            type="object" 
+                            class="btn-success"
+                            groups="custom_purchase_process.group_supplier_analysis_general_manager"
+                            invisible="state != 'quality_inspection'"/>
+                    <button name="action_done" 
+                            string="Generate PO" 
+                            type="object" 
+                            class="btn-success"
+                            groups="custom_purchase_process.group_supplier_analysis_generate_purchase_order"
+                            invisible="state != 'gm_approved'"/>
+                    <button name="action_generate_quality_inspection" 
+                            string="Generate Quality Inspection"
+                            type="object" 
+                            class="btn-primary"
+                            groups="custom_purchase_process.group_generate_quality_inspection"
+                            invisible="state != 'department_approved'"/>
+                    <button name="action_cancel" 
+                            string="Cancel" 
+                            type="object" 
+                            class="btn-danger"
+                            invisible="state not in ['draft', 'in_progress', 'department_approved', 'gm_approved']"/>
+                    <button name="action_reset_to_draft" 
+                            string="Reset to Draft" 
+                            type="object" 
+                            class="btn-secondary"
+                            invisible="state == 'draft'"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <!-- <button type="object" name="action_view_po"
+                                icon="fa-external-link"
+                                string="PO"
+                                class="oe_stat_button"/> -->
+
+                        <button class="oe_stat_button" 
+                                name="action_view_po_supplier" 
+                                type="object"
+                                string="PO"
+                                icon="fa-external-link">                                            
+                                    <!-- <div class="o_stat_info">
+                                        <span class="o_stat_value">
+                                            <field name="purchase_order_count" widget="statinfo" string=" PO(s)"/>
+                                        </span>
+                                    </div> -->
+                        </button>
+
+
+
+
+
+                        <button type="object" name="action_view_sa"
+                                icon="fa-external-link"
+                                string="Quality Inspection"
+                                class="oe_stat_button"/>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="name" readonly="1" class="o_inline_display"/>
+                            <field name="state" invisible="1"/>
+                            <field name="date_requested" readonly="1"/>
+                            <field name="requested_by" readonly="1"/>
+                            <field name="approved_by"/>
+                        </group>
+                        <group>
+                            <field name="state" readonly="0"/>
+                            <field name="approved_by" readonly="1"/>
+                            <field name="purchase_request_id" string="Purchase Request" readonly="1" force_save="1"/>
+                            <field name="qa_required"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="department_remark" readonly="state != 'in_progress'"/>
+                    </group>
+                    <notebook>
+                        <page string="Product Lines">
+
+                            <field name="supplier_analysis_lines">
+                                <list editable="bottom">
+
+                                    <!-- Fields for regular lines (hidden when hide_merge_fields is True) -->
+                                    <field name="merge_note" string="Merge Note" invisible="show_merge_note == False"/>
+                                    <field name="product_id" string="Product" invisible="hide_merge_fields"/>
+                                    <field name="partner_id" string="Vendor" invisible="hide_merge_fields"/>
+                                    <field name="name" string="Description" invisible="hide_merge_fields"/>
+                                    <field name="quantity" string="Quantity" invisible="hide_merge_fields"/>
+                                    <field name="unit_price" string="Unit Price" invisible="hide_merge_fields"/>
+                                    <field name="selected" string="Selected" widget="boolean_toggle" invisible="hide_merge_fields"/>
+                                    <field name="chosen_for_inspection" string="Inspect" invisible="hide_merge_fields"/>
+                                    <field name="passed_inspection" string="Passed Inspection" invisible="hide_merge_fields"/>
+
+                                    
+                                    <!-- Hidden control fields -->
+                                    <field name="is_merge_line" invisible="1" optional="hide"/>
+                                    <field name="show_merge_note" invisible="1" optional="hide"/>
+                                    <field name="hide_merge_fields" invisible="1" optional="hide"/>
+
+                                    <!-- Only visible in merge line -->
+                                    
+                                </list>
+                            </field>
+
+                        </page>
+
+                        <!-- <page string="Product Lines">
+                            <field name="supplier_analysis_lines">
+                                <list editable="bottom">
+                                    <field name="qa_required" column_invisible="1"/>
+                                    <field name="product_id" readonly="1" string="Product"/>
+                                    <field name="partner_id" readonly="1" string="Vendor"/>
+                                    <field name="name" readonly="1" string="Description"/>
+                                    <field name="unit_price" readonly="1" string="Unit Price"/>
+                                    <field name="selected" string="Selected" widget="boolean_toggle"/>
+                                    <field name="chosen_for_inspection" string="Inspect" optional="hide"/>
+                                    <field name="passed_inspection" string="Passed Inspection" readonly="1"
+                                           optional="hide" force_save="1"/>
+                                </list>
+                                <form>
+                                    <group>
+                                        <field name="product_id" string="Product"/>
+                                        <field name="partner_id" string="Vendor"/>
+                                        <field name="name" string="Description"/>
+                                        <field name="unit_price" string="Unit Price"/>
+                                        <field name="selected" string="Selected"/>
+                                    </group>
+                                </form>
+                            </field>
+                        </page> -->
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_supplier_analysis_tree" model="ir.ui.view">
+        <field name="name">supplier.analysis.tree</field>
+        <field name="model">supplier.analysis</field>
+        <field name="arch" type="xml">
+            <list default_order="name desc">
+                <field name="name" string="Analysis Reference"/>
+                <field name="state" string="Status"/>
+                <field name="date_requested" string="Requested Date"/>
+                <field name="requested_by" string="Requested By"/>
+                <field name="purchase_request_id" string="Purchase Request"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_supplier_analysis" model="ir.actions.act_window">
+        <field name="name">Supplier Analysis</field>
+        <field name="res_model">supplier.analysis</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+                Click to create a new Supplier Analysis.
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_supplier_analysis_root"
+              name="Supplier Analysis" parent="menu_purchase_management"
+              action="action_supplier_analysis" sequence="14"/>
+
+
+    <record id="view_quality_inspection_form" model="ir.ui.view">
+        <field name="name">quality.inspection.form</field>
+        <field name="model">quality.inspection</field>
+        <field name="arch" type="xml">
+            <form string="Quality Assurance">
+                <header>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,requested_docs,parameters_received,approved"/>
+                    <button name="action_request_documents" string="Request Documents" type="object" class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_receive_parameters" string="Receive Parameters" type="object" class="btn-info"
+                            invisible="state != 'requested_docs'"/>
+                    <button name="action_approve" string="Approve Inspection" type="object" class="btn-success"
+                            invisible="state != 'parameters_received'"/>
+                    <button name="action_reset_to_draft" string="Reset to Draft" type="object" class="btn-secondary"
+                            invisible="state == 'draft'"/>
+                </header>
+                <sheet>
+                    <group>
+                        <field name="name" readonly="1" class="o_inline_display"/>
+                        <field name="state" invisible="1"/>
+                        <field name="requested_date" readonly="1"/>
+                        <field name="inspected_date" readonly="1"/>
+                        <field name="inspected_by" readonly="1"/>
+                        <field name="partner_id" string="Vendor" readonly="1"/>
+                        <field name="supplier_analysis_id" string="Supplier Analysis" readonly="1"/>
+                    </group>
+                    <notebook>
+                        <page string="Inspection Lines">
+                            <field name="quality_inspections_line_ids">
+                                <list editable="bottom">
+                                    <field name="product_id" string="Product"/>
+                                    <field name="name" string="Description"/>
+                                    <field name="passed_inspection" string="Passed" widget="boolean_toggle"/>
+                                    <field name="inspection_remark" string="Remark"/>
+                                </list>
+                                <form>
+                                    <group>
+                                        <field name="product_id" string="Product"/>
+                                        <field name="name" string="Description"/>
+                                        <field name="passed_inspection" string="Passed"/>
+                                        <field name="inspection_remark" string="Remark"/>
+                                    </group>
+                                </form>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_quality_inspection_tree" model="ir.ui.view">
+        <field name="name">quality.inspection.tree</field>
+        <field name="model">quality.inspection</field>
+        <field name="arch" type="xml">
+            <list default_order="requested_date desc">
+                <field name="name" string="Inspection Reference"/>
+                <field name="partner_id" string="Vendor"/>
+                <field name="state" string="Status"/>
+                <field name="requested_date" string="Requested Date"/>
+                <field name="inspected_date" string="Inspected Date"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_quality_inspection" model="ir.actions.act_window">
+        <field name="name">Quality Assurance</field>
+        <field name="res_model">quality.inspection</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+                Click to create a new Quality Assurance.
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_quality_inspection_root" 
+              name="Quality Assurance" parent="menu_purchase_management"
+              action="action_quality_inspection" sequence="15"/>
+
+
+    <!-- Tree View for Purchase Request -->
+    <record id="view_purchase_request_tree" model="ir.ui.view">
+        <field name="name">purchase.request.tree</field>
+        <field name="model">purchase.request</field>
+        <field name="arch" type="xml">
+            <list default_order="name desc">
+                <field name="name" string="Request Reference"/>
+                <field name="material_request_id" string="Material Request"/>
+                <field name="date_requested" string="Requested Date"/>
+                <field name="requested_by" string="Requested By"/>
+                <field name ="approved_by" string="Approved By"/>
+                <field name="quality_evaluation"/>
+                <field name="state" string="Status"/>
+                <field name="company_id" string="Company"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View for Purchase Request -->
+    <record id="view_purchase_request_form" model="ir.ui.view">
+        <field name="name">purchase.request.form</field>
+        <field name="model">purchase.request</field>
+        <field name="arch" type="xml">
+            <form string="Purchase Request">
+                <header>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,submitted,approved,rfq,supplier_analysis,quality_evaluation,purchase_order,rejected"/>
+                    <button name="action_submit" 
+                            string="Submit" 
+                            type="object" 
+                            class="btn-primary"
+                            groups="custom_purchase_process.group_purchase_request_requester"
+                            invisible="state != 'draft'"/>
+                    <button name="action_approve" 
+                            string="Approve" 
+                            type="object" 
+                            class="btn-success"
+                            groups="custom_purchase_process.group_purchase_request_approver"
+                            invisible="state != 'submitted'"/>
+                    <button name="action_set_rfq" 
+                            string="New RFQ" 
+                            type="object" 
+                            class="btn-info"
+                            groups="custom_purchase_process.group_create_new_rfq"
+                            invisible="state not in ['approved', 'rfq']"/>
+                    <button name="action_generate_purchase_order" 
+                            type="object" 
+                            string="Generate Purchase Order"
+                            class="btn-primary" 
+                            groups="custom_purchase_process.group_material_request_requestor"
+                            invisible="state != 'supplier_analysis'"/>
+                    <button name="action_set_supplier_analysis" 
+                            string="Supplier Analysis" 
+                            type="object"
+                            class="btn-warning" 
+                            groups="custom_purchase_process.group_create_supplier_analysis"
+                            invisible="state != 'rfq'"/>
+                    <button name="action_reject" 
+                            string="Reject" 
+                            type="object" 
+                            class="btn-danger"
+                            groups="custom_purchase_process.group_material_request_requestor"
+                            invisible="state != 'draft'"/>
+                </header>
+
+
+                <sheet>
+
+
+
+
+                
+                    <div class="oe_button_box" name="button_box">
+
+                        <button class="oe_stat_button" 
+                                name="action_view_quotations" 
+                                type="object"
+                                icon="fa-external-link">                                            
+                                    <div class="o_stat_info">
+                                        <span class="o_stat_value">
+                                            <field name="quotation_count" widget="statinfo" string=" QO(s)"/>
+                                        </span>
+                                    </div>
+                        </button>
+                            
+
+                        <button class="oe_stat_button"
+                                type="object" 
+                                name="action_view_sa"
+                                icon="fa-external-link"
+                                string="Supplier Analysis">
+                                                                    
+                        </button>
+
+
+                        <button class="oe_stat_button" 
+                                name="action_view_po" 
+                                type="object"
+                                icon="fa-external-link">                                            
+                                    <div class="o_stat_info">
+                                        <span class="o_stat_value">
+                                            <field name="purchase_order_count" widget="statinfo" string=" PO(s)"/>
+                                        </span>
+                                    </div>
+                        </button>
+
+
+
+
+
+
+                        <!-- <button type="object" name="action_view_po"
+                                icon="fa-external-link"
+                                string="PO"
+                                class="oe_stat_button"/> -->
+
+                    </div>
+
+                    <div class="o_form_sheet_bg">
+                        <h1>
+                            <field name="name" class="o_inline_display"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="material_request_id" invisible="material_request_id == False" readonly="1"/>
+                            <field name="date_requested" readonly="1"/>
+                            <field name="requested_by" readonly="1"/>
+                            <field name ="approved_by" string="Approved By"/>
+                        </group>
+                        <group>
+                            <field name="quality_evaluation" readonly="state not in ['draft','submitted']"/>
+                            <!-- <field name="state" readonly="0"/> -->
+                            <field name="company_id" readonly="state not in ['draft','submitted']"/>
+                            <field name="user_id" readonly="state not in ['draft','submitted']"/>
+
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Request Lines">
+                            <field name="purchase_request_line_ids">
+                                <list editable="bottom">
+                                    <field name="state" column_invisible="1"/>
+                                    <field name="product_id" string="Product"
+                                           readonly="state not in ['draft','submitted']"/>
+                                    <field name="description" string="Description"
+                                           readonly="state not in ['draft','submitted']"/>
+                                    <field name="quantity" string="Quantity"
+                                           readonly="state not in ['draft','submitted']"/>
+                                    <field name="unit_price" string="Unit Price"
+                                           readonly="state not in ['draft','submitted']"/>
+                                    <field name="subtotal" string="Subtotal" readonly="1" force_save="1"/>
+                                    <field name="qa_required" optional="hide"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Tree View for Purchase Quotation -->
+    <record id="view_purchase_quotation_tree" model="ir.ui.view">
+        <field name="name">purchase.quotation.tree</field>
+        <field name="model">purchase.quotation</field>
+        <field name="arch" type="xml">
+            <list default_order="name desc">
+                <field name="material_request_id" string="Material Request" column_invisible="1"/>
+                <field name="purchase_request_id" string="Purchase Request"/>
+                <field name="partner_id" string="Vendor"/>
+                <field name="date_order" string="Date"/>
+                <field name="state" string="Status"/>
+                <field name="amount_total" string="Total Amount"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View for Purchase Quotation -->
+    <record id="view_purchase_quotation_form" model="ir.ui.view">
+        <field name="name">purchase.quotation.form</field>
+        <field name="model">purchase.quotation</field>
+        <field name="arch" type="xml">
+            <form string="Purchase Quotation">
+                <header>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,sent,accepted"/>
+                    <button name="action_send_to_vendor" 
+                            string="Sent to Vendor"     
+                            type="object" 
+                            class="btn-primary"
+                            groups="custom_purchase_process.group_send_to_vendor_rfq"
+                            invisible="state != 'draft'"/>
+                    <button name="action_accept" 
+                            string="Done" 
+                            type="object" 
+                            class="btn-success"
+                            groups="custom_purchase_process.group_accept_rfq"
+                            invisible="state != 'sent'"/>
+                    <button name="action_reject" 
+                            string="Reject" 
+                            type="object" 
+                            class="btn-danger"
+                            invisible="state != 'sent'"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="state" invisible="1"/>
+                            <field name="partner_id" readonly="state in ['accepted', 'rejected']"/>
+                            <field name="date_order" readonly="state in ['accepted', 'rejected']"/>
+                            <field name="quality_evaluation" readonly="state in ['accepted', 'rejected']"/>
+                            <field name="company_id"/>
+                        </group>
+                        <group>
+                            <field name="name" readonly="1"/>
+                            <field name="material_request_id" readonly="state in ['accepted', 'rejected']"/>
+                            <field name="purchase_request_id" readonly="state in ['accepted', 'rejected']"/>
+                            <field name="procurement_type" readonly="state in ['accepted', 'rejected']"/>
+                            <field name="amount_total" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Quotation Lines">
+                            <field name="quotation_line_ids">
+                                <list editable="bottom">
+                                    <field name="state" column_invisible="1"/>
+                                    <field name="product_id" string="Product"
+                                           readonly="state in ['accepted', 'rejected']"/>
+                                    <field name="description" string="Description"
+                                           readonly="state in ['accepted', 'rejected']"/>
+                                    <field name="quantity" string="Quantity"
+                                           readonly="state in ['accepted', 'rejected']"/>
+                                    <field name="unit_price" string="Unit Price"
+                                           readonly="state in ['accepted', 'rejected']"/>
+                                    <field name="subtotal" string="Subtotal" readonly="1"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action for Purchase Request -->
+    <record id="action_purchase_request" model="ir.actions.act_window">
+        <field name="name">Purchase Request</field>
+        <field name="res_model">purchase.request</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Action for Purchase Quotation -->
+    <record id="action_purchase_quotation" model="ir.actions.act_window">
+        <field name="name">Purchase Quotations</field>
+        <field name="res_model">purchase.quotation</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+
+    <!-- Submenu for Purchase Requests -->
+   
+
+    <!-- Submenu for Purchase Quotations -->
+    <menuitem id="menu_purchase_quotation" 
+              parent="menu_purchase_management" name="Purchase Quotations" action="action_purchase_quotation"
+              sequence="2"/>
+
+    <menuitem id="menu_purchase_request" parent="menu_purchase_management" name="Purchase Requests"
+               action="action_purchase_request"
+              sequence="1"/>
+
+    <record id="view_purchase_order_form_inherit" model="ir.ui.view">
+        <field name="name">purchase.order.form.inherit</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <!-- Add Statusbar -->
+            <xpath expr="//header/field[@name='state']" position="replace">
+                <field name="state" widget="statusbar"
+                       statusbar_visible="draft,advance_payment,awaiting_delivery,credit_settlement,done"/>
+            </xpath>
+
+            <xpath expr="//notebook" position="inside">
+                <page string="Delivery Instructions">
+                    <field name="delivery_instruction_ids">
+                        <list editable="bottom">
+                            <field name="expected_date" string="Expected Date"/>
+                            <field name="quantity" string="Quantity"/>
+                            <field name="name" string="Remark"/>
+
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+            <!-- Add Procurement Type and State Fields -->
+            <field name="partner_id" position="after">
+                <field name="procurement_type" required="1"/>
+            </field>
+
+            <!-- Add Quality Inspection Fields -->
+            <xpath expr="//sheet" position="inside">
+                <group string="Quality Inspection">
+                    <field name="quality_evaluation"/>
+                    <field name="passed_evaluation"/>
+                    <field name="evaluation_remark"/>
+                </group>
+            </xpath>
+
+            <!-- Modify the Create Invoice Button Visibility -->
+            <xpath expr="//header/button[@name='action_create_invoice']" position="attributes">
+                <attribute name="invisible">state not in ('advance_payment', 'awaiting_delivery', 'credit_settlement',
+                    'purchase')
+                </attribute>
+            </xpath>
+
+
+            </xpath>
+        </field>
+    </record>
+
+
+</odoo>

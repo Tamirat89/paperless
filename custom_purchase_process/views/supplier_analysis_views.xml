@@ -1,0 +1,401 @@
+<odoo>
+
+    <record id="view_supplier_analysis_form" model="ir.ui.view">
+        <field name="name">supplier.analysis.form</field>
+        <field name="model">supplier.analysis</field>
+        <field name="arch" type="xml">
+            <form string="Supplier Analysis">
+                <header>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,checked,in_progress,committee_approved,procurement_approved,pre_odit_review,gm_approved,done"/>
+                    
+                    <button name="action_in_progress" 
+                            string="Start Analysis" 
+                            type="object" 
+                            class="btn-primary"
+                            groups="custom_purchase_process.group_supplier_analysis_user"
+                            invisible="state != 'draft'"/>
+
+                    <button name="action_update_supplier_analysis" 
+                            string="Update" 
+                            type="object" 
+                            class="btn-info"
+                            groups="custom_purchase_process.group_supplier_analysis_user"
+                            invisible="state != 'draft'"/>
+
+                    <button name="action_check" 
+                            string="Check" 
+                            type="object" 
+                            class="btn-success"
+                            groups="custom_purchase_process.group_supplier_analysis_supervisor"
+                            invisible="state != 'checked'"/>
+
+                    <button name="action_reset_to_draft" 
+                            string="Resend to Supply Analysis"
+                            type="object" 
+                            class="btn-warning"
+                            groups="custom_purchase_process.group_supplier_analysis_supervisor"
+                            invisible="state != 'checked'"/>
+
+                    <button name="action_cancel" 
+                            string="Cancel" 
+                            type="object" 
+                            class="btn-danger"
+                            groups="custom_purchase_process.group_supplier_analysis_supervisor"
+                            invisible="state != 'checked'"/>
+
+
+
+
+
+
+                    <button name="action_committee_approve" 
+                            string="Committee Approve"
+                            type="object" 
+                            class="btn-success"
+                            groups="custom_purchase_process.group_supplier_analysis_approver"
+                            invisible="state != 'in_progress' or not button_show_approve" />
+
+                    <button name="action_reset_to_draft" 
+                            string="Resend to Supply Analysis"
+                            type="object" 
+                            class="btn-warning"
+                            groups="custom_purchase_process.group_supplier_analysis_approver"
+                            invisible="state != 'in_progress' or not button_show_approve" />
+
+                    <button name="action_cancel" 
+                            string="Cancel" 
+                            type="object" 
+                            class="btn-danger"
+                            groups="custom_purchase_process.group_supplier_analysis_approver"
+                            invisible="state != 'in_progress' or not button_show_approve" />
+                    
+                    
+                    
+                    
+                    
+                    
+                    <button name="action_procurement_approve" 
+                            string="Procurement Approve"
+                            type="object" 
+                            class="btn-success"
+                            groups="custom_purchase_process.group_supplier_analysis_procurement_manager"
+                            invisible="state != 'committee_approved'"/>
+
+                    <button name="action_reset_to_draft" 
+                            string="Resend to Supply Analysis"
+                            type="object" 
+                            class="btn-warning"
+                            groups="custom_purchase_process.group_supplier_analysis_procurement_manager"
+                            invisible="state != 'committee_approved'"/>
+
+                    <button name="action_cancel" 
+                            string="Cancel" 
+                            type="object" 
+                            class="btn-danger"
+                            groups="custom_purchase_process.group_supplier_analysis_procurement_manager"
+                            invisible="state != 'committee_approved'"/>
+                    
+                    
+                    
+
+                    <!-- Auditor Actions -->
+                    <button name="action_pre_odit_review" 
+                            string="Pre-Audit Reviewed"
+                            type="object" 
+                            class="btn-success"
+                            groups="custom_purchase_process.group_supplier_analysis_auditor_independent"
+                            invisible="state != 'procurement_approved'"/>
+
+
+                    <button name="action_reset_to_draft" 
+                            string="Resend to Supply Analysis"
+                            type="object" 
+                            class="btn-warning"
+                            groups="custom_purchase_process.group_supplier_analysis_auditor_independent"
+                            invisible="state != 'procurement_approved'"/>
+
+                    
+
+                    
+
+                    <button name="action_generate_quality_inspection" 
+                            string="Generate Quality Inspection"
+                            type="object" 
+                            class="btn-warning"
+                            groups="custom_purchase_process.group_purchase_request_ceos"
+                            invisible="state != 'committee_approved'"
+                            />
+
+
+
+                    <button name="action_gm_approve" 
+                            string="CEO Supplier analysis and PO Approval" 
+                            type="object" 
+                            class="btn-success"
+                            groups="custom_purchase_process.group_supplier_analysis_ceo"
+                            invisible="state != 'pre_odit_review'"/>
+
+                    <button name="action_reset_to_draft" 
+                            string="Resend to Supply Analysis"
+                            type="object" 
+                            class="btn-warning"
+                            groups="custom_purchase_process.group_supplier_analysis_ceo"
+                            invisible="state != 'pre_odit_review'"/>
+
+                    <button name="action_cancel" 
+                            string="Cancel" 
+                            type="object" 
+                            class="btn-danger"
+                            groups="custom_purchase_process.group_supplier_analysis_ceo"
+                            invisible="state != 'pre_odit_review'"/>
+                    <!-- <button name="action_done" 
+                            string="Generate PO" 
+                            type="object" 
+                            class="btn-success"
+                            groups="custom_purchase_process.group_custom_purchase_request_purchaser"
+                            invisible="state != 'gm_approved'"/> -->
+                      
+
+                    
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" 
+                                name="action_view_supplier_analysis_pos" 
+                                type="object"
+                                icon="fa-shopping-cart"
+                                invisible="supplier_analysis_po_count == 0">
+                            <div class="o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="supplier_analysis_po_count"/>
+                                </span>
+                                <span class="o_stat_text">
+                                    Purchase Orders
+                                </span>
+                            </div>
+                        </button>
+                        
+                        <div class="oe_stat_button m-2" 
+                             invisible="state not in ['in_progress', 'committee_approved'] or remaining_approvers_count == 0">
+                            <div class="o_stat_info">
+                                <span class="o_stat_value text-danger text-center">
+                                    <field name="remaining_approvers_count"/>
+                                </span>
+                                <span class="o_stat_text">
+                                    Pending Committee Approvers
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="o_form_sheet_bg">
+                        <h1>
+                            <field name="name" class="o_inline_display"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Filled by Procurement Officer">
+                            <field name="requested_by" readonly="1"/>
+                            <field name="remark" string="Remark"/>
+                            <field name="reason_for_selecting_vendor" string="Reason for Selecting/Updating Vendor"/>
+                            <field name="qa_required" readonly="state not in ['draft', 'checked', 'committee_approved']"/>
+                        </group>
+                        <group string="INFO">                           
+                            <!-- <field name="state" invisible="1"/> -->
+                            <field name="company_id"/>
+                            <field name="date_requested" readonly="1"/>
+                            <field name="purchase_request_id" string="Purchase Request" readonly="1" force_save="1"/>   
+                            <field name="total_amount" readonly="1" force_save="1"/> 
+                           
+                            
+                        </group>
+                        <group string="Approvals">
+                            <!-- <field name="state" readonly="0"/> -->
+                            <field name="checked_by_id"  readonly="1"/> 
+                            <field name="approved_user_ids" readonly="1" string="Approved Committee Members" widget="many2many_tags"/>
+                            <field name="remaining_approvers_ids" readonly="1" string="Remaining Committee Members" widget="many2many_tags"/>
+                            
+                            <field name="approved_by" readonly="1"/>
+                            <field name="reviewed_by_id" readonly="1"/>
+                            <!-- <field name="gm_approved_by_id" readonly="1"/>                        -->
+                            
+                            
+                        </group>
+                        <group string="Comments">
+                            <field name="committee_remark" readonly="state != 'in_progress'"/>
+                            <field name="reason_for_cancel" string="Reason for Cancellation"/>
+                            <field name="reason_for_set_draft" string="Reason for Resend to Supply Analysis" readonly="state == 'draft'"/>
+                            <field name="rejection_reason" readonly="1" invisible="not rejection_reason"/>
+                            
+
+                            
+                        </group>
+                        <group>
+                            <field name="button_show_approve" invisible="1"/>
+                            <field name="dont_show_quality_inspection_button" invisible="1"/>
+                            <field name="remaining_approvers_count" invisible="1"/>
+                            <field name="supplier_analysis_po_count" invisible="1"/>
+                        </group>
+                    </group>
+                   
+                    <notebook>
+                        <page string="Product Lines">
+
+                            <field name="supplier_analysis_lines" create="0" delete="0" options="{'no_create': True, 'no_create_edit': True, 'no_open': True}">
+                                <list editable="bottom" decoration-info="is_newly_added" no_create="1" no_open="1">
+                                    <field name="state" column_invisible="1"/>
+                                    <!-- Fields for regular lines (hidden when hide_merge_fields is True) -->
+                                    <field name="merge_note" string="Merge Note" invisible="show_merge_note == False"/>
+                                    <field name="product_id" string="Product" invisible="hide_merge_fields" readonly="1"/>
+                                    <field name="partner_id" string="Vendor" invisible="hide_merge_fields" readonly="1"/>
+                                    <field name="name" string="Description" invisible="hide_merge_fields" readonly="1"/>
+                                    <field name="product_uom_id" string="UOM" invisible="hide_merge_fields" readonly="1"/>
+                                    <field name="quantity" string="Quantity" invisible="hide_merge_fields" readonly="1"/>
+                                    <field name="unit_price" string="Unit Price" invisible="hide_merge_fields" readonly="1"/>
+                                    <field name="subtotal" string="Subtotal" readonly="1" force_save="1"
+                                           invisible="hide_merge_fields"/>
+                                                                         <field name="selected" string="Selected" widget="boolean_toggle" invisible="hide_merge_fields" readonly="selected_readonly"/>
+                                    <field name="chosen_for_inspection" string="Inspect" invisible="hide_merge_fields"/>
+                                    <field name="passed_inspection" string="Passed Inspection" invisible="hide_merge_fields" optional="hide"/>
+                                    <field name="quality_inspection_status" string="Inspection Status" 
+                                           widget="badge" 
+                                           decoration-success="quality_inspection_status == 'passed'" 
+                                           decoration-danger="quality_inspection_status == 'failed'"
+                                           invisible="hide_merge_fields" readonly="1"/>
+
+                                    
+                                                                         <!-- Hidden control fields -->
+                                     <field name="state" invisible="1" optional="hide"/>
+                                     <field name="selected_readonly" invisible="1" optional="hide"/>
+                                     <field name="is_merge_line" invisible="1" optional="hide"/>
+                                     <field name="show_merge_note" invisible="1" optional="hide"/>
+                                     <field name="hide_merge_fields" invisible="1" optional="hide"/>
+                                     <field name="is_newly_added" invisible="1" optional="hide"/>
+
+                                    <!-- Only visible in merge line -->
+                                    
+                                </list>
+                            </field>
+
+                        </page>
+
+                        <!-- <page string="Product Lines">
+                            <field name="supplier_analysis_lines">
+                                <list editable="bottom">
+                                    <field name="qa_required" column_invisible="1"/>
+                                    <field name="state" column_invisible="1"/>
+                                    <field name="product_id" readonly="state != 'draft'" string="Product"/>
+                                    <field name="partner_id" readonly="1" string="Vendor"/>
+                                    <field name="name" readonly="1" string="Description"/>
+                                    <field name="unit_price" readonly="state != 'draft'" string="Unit Price"/>
+                                    <field name="selected" string="Selected" widget="boolean_toggle"/>
+                                    <field name="chosen_for_inspection" string="Inspect" optional="hide"/>
+                                    <field name="passed_inspection" string="Passed Inspection" readonly="1"
+                                           optional="hide" force_save="1"/>
+                                </list>
+                                <form>
+                                    <field name="state" invisible="1"/>
+                                    <group>
+                                        <field name="product_id" string="Product"/>
+                                        <field name="partner_id" string="Vendor"/>
+                                        <field name="name" string="Description"/>
+                                        <field name="unit_price" string="Unit Price" readonly="state != 'draft'"/>
+                                        <field name="selected" string="Selected"/>
+                                    </group>
+                                </form>
+                            </field>
+                        </page> -->
+                    </notebook>
+                </sheet>
+
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_supplier_analysis_tree" model="ir.ui.view">
+        <field name="name">supplier.analysis.tree</field>
+        <field name="model">supplier.analysis</field>
+        <field name="arch" type="xml">
+            <list default_order="name desc" decoration-info="state == 'draft'" decoration-warning="state == 'in_progress'" decoration-success="state == 'done'" decoration-danger="remaining_approvers_count > 0">
+                <field name="name" string="Analysis Reference"/>
+                <field name="state" string="Status" widget="badge" 
+                       decoration-info="state == 'draft'"
+                       decoration-warning="state == 'in_progress'"
+                       decoration-primary="state == 'committee_approved'"
+                       decoration-success="state in ['gm_approved', 'done']"/>
+                <field name="date_requested" string="Requested Date"/>
+                <field name="requested_by" string="Purchaser"/>
+                <field name="checked_by_id" string="Checked By"/>
+                <field name="purchase_request_id" string="Purchase Request"/>
+                <field name="qa_required" string="QA Required"/>
+                <field name="remaining_approvers_count" string="Pending Approvals" 
+                       invisible="remaining_approvers_count == 0"
+                       decoration-danger="remaining_approvers_count > 0"/>
+                <field name="total_amount" string="Total Amount" widget="monetary" options="{'currency_field': 'company_id'}"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_supplier_analysis_search" model="ir.ui.view">
+        <field name="name">supplier.analysis.search</field>
+        <field name="model">supplier.analysis</field>
+        <field name="arch" type="xml">
+            <search string="Supplier Analysis">
+                <field name="name"/>
+                <field name="purchase_request_id"/>
+                <field name="requested_by"/>
+                <field name="state"/>
+                <field name="qa_required"/>
+                <filter string="Today" name="filter_today" domain="[('date_requested', '=', context_today())]"/>
+                <filter string="This Week" name="filter_week" domain="[('date_requested', '&gt;=', (datetime.datetime.combine(context_today() - datetime.timedelta(days=context_today().weekday()), datetime.time(0,0,0))).strftime('%Y-%m-%d')), ('date_requested', '&lt;=', (datetime.datetime.combine(context_today() + datetime.timedelta(days=6-context_today().weekday()), datetime.time(23,59,59))).strftime('%Y-%m-%d'))]"/>
+                <filter string="This Month" name="filter_month" domain="[('date_requested', '&gt;=', (datetime.datetime.combine(context_today().replace(day=1), datetime.time(0,0,0))).strftime('%Y-%m-%d')), ('date_requested', '&lt;=', (datetime.datetime.combine((context_today().replace(day=1) + datetime.timedelta(days=32)).replace(day=1) - datetime.timedelta(days=1), datetime.time(23,59,59))).strftime('%Y-%m-%d'))]"/>
+                <separator/>
+                <filter string="Draft" name="filter_draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="In Progress" name="filter_in_progress" domain="[('state', '=', 'in_progress')]"/>
+                <filter string="Committee Approved" name="filter_committee_approved" domain="[('state', '=', 'committee_approved')]"/>
+                <filter string="CEO Approved" name="filter_gm_approved" domain="[('state', '=', 'gm_approved')]"/>
+                <filter string="Done" name="filter_done" domain="[('state', '=', 'done')]"/>
+                <separator/>
+                <filter string="QA Required" name="filter_qa_yes" domain="[('qa_required', '=', 'yes')]"/>
+                <filter string="No QA" name="filter_qa_no" domain="[('qa_required', '=', 'no')]"/>
+                <separator/>
+                <filter string="State" name="group_by_state" context="{'group_by': 'state'}"/>
+                <filter string="Purchaser" name="group_by_purchaser" context="{'group_by': 'requested_by'}"/>
+                <filter string="QA Required" name="group_by_qa" context="{'group_by': 'qa_required'}"/>
+                <filter string="Date" name="group_by_date" context="{'group_by': 'date_requested'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_supplier_analysis" model="ir.actions.act_window">
+        <field name="name">Supplier Analysis</field>
+        <field name="res_model">supplier.analysis</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_supplier_analysis_search"/>
+        <field name="context">{'search_default_group_by_state': 1}</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+                Click to create a new Supplier Analysis.
+            </p>
+        </field>
+    </record>
+
+     <menuitem id="menu_supplier_analysis_root_menu_2"
+              name="Supplier Analysis"
+              web_icon="custom_purchase_process,static/description/vendor_evaluation.png" 
+              action="action_supplier_analysis"
+              groups="custom_purchase_process.group_supplier_analysis_user,custom_purchase_process.group_supplier_analysis_supervisor,custom_purchase_process.group_supplier_analysis_approver,custom_purchase_process.group_supplier_analysis_procurement_manager,custom_purchase_process.group_supplier_analysis_auditor_independent,custom_purchase_process.group_supplier_analysis_ceo,custom_purchase_process.group_custom_supplier_analysis_super_admin"                        
+             />
+    
+    <menuitem id="menu_supplier_analysis_root_menu"
+              name="Supplier Analysis"
+              parent="menu_purchase_request_root_module"            
+             />
+             
+    <menuitem id="menu_supplier_analysis_sub_menu"
+              name="Supplier Analysis"
+              parent="menu_supplier_analysis_root_menu"
+              action="action_supplier_analysis" 
+              sequence="1"/>
+
+</odoo>
