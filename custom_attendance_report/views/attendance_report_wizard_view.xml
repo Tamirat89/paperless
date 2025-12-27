@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_attendance_report_wizard_form" model="ir.ui.view">
+        <field name="name">attendance.report.wizard.form</field>
+        <field name="model">attendance.report.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Attendance Report">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="start_date" required="1"/>
+                            <field name="end_date" required="1"/>
+                        </group>
+                        <group>
+                            <field name="filter_type" required="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group>
+                            <field name="company_ids" 
+                                   widget="many2many_tags" 
+                                   options="{'no_create': True}"
+                                   invisible="filter_type != 'company'"
+                                   required="filter_type == 'company'"/>
+                            <field name="department_ids" 
+                                   widget="many2many_tags" 
+                                   options="{'no_create': True}" 
+                                   domain="[('company_id', 'in', company_ids)]"
+                                   invisible="filter_type != 'department'"
+                                   required="filter_type == 'department'"/>
+                            <field name="employee_ids" 
+                                   widget="many2many_tags" 
+                                   options="{'no_create': True}" 
+                                   domain="[('company_id', 'in', company_ids)]"
+                                   invisible="filter_type != 'employee'"
+                                   required="filter_type == 'employee'"/>
+                        </group>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="action_generate_excel" string="Generate Excel Report" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_attendance_report_wizard" model="ir.actions.act_window">
+        <field name="name">Attendance Report</field>
+        <field name="res_model">attendance.report.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>
+
