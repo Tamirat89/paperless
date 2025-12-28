@@ -21,12 +21,15 @@
     'depends': ['base', 'hr', 'hr_attendance'],
     'data': [
         'security/ir.model.access.csv',
+        'views/hr_attendance_view.xml',
         'views/attendance_report_wizard_view.xml',
+        'views/res_config_settings_view.xml',
         'views/menu.xml',
     ],
     'installable': True,
     'application': False,
     'auto_install': False,
     'license': 'LGPL-3',
+    'post_init_hook': 'post_init_update_attendance_times',
 }
 

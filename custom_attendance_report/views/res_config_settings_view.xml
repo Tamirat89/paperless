@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form_inherit_attendance_time_offset" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.attendance.time.offset</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="hr_attendance.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//block[@name='overtime_settings']" position="after">
+                <block title="Time Display Offset" name="time_offset_settings">
+                    <setting string="Hour Offset" help="Hours to add (positive) or subtract (negative) from check-in and check-out times displayed in start_date and end_date fields. Example: 3 adds 3 hours, -3 subtracts 3 hours.">
+                        <field name="attendance_hour_offset" class="text-center" style="width: 5ch;"/>
+                        <span class="ms-2">Hours</span>
+                    </setting>
+                    <setting string="Minute Offset" help="Minutes to add (positive) or subtract (negative) from check-in and check-out times displayed in start_date and end_date fields. Example: 30 adds 30 minutes, -30 subtracts 30 minutes.">
+                        <field name="attendance_minute_offset" class="text-center" style="width: 5ch;"/>
+                        <span class="ms-2">Minutes</span>
+                    </setting>
+                </block>
+            </xpath>
+        </field>
+    </record>
+</odoo>
+

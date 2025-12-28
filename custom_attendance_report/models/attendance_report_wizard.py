@@ -64,7 +64,9 @@ class AttendanceReportWizard(models.TransientModel):
         return weeks
 
     def _get_attendance_data(self, week_start, week_end):
-        """Get attendance data for a specific week"""
+        """Get attendance data for a specific week
+        Uses start_date and end_date fields which already have offset applied
+        """
         domain = [
             ('check_in', '>=', datetime.combine(week_start, datetime.min.time())),
             ('check_in', '<=', datetime.combine(week_end, datetime.max.time())),
@@ -82,73 +84,34 @@ class AttendanceReportWizard(models.TransientModel):
         
         attendances = self.env['hr.attendance'].search(domain, order='check_in asc')
         
-        # Read raw UTC datetime values directly from database to avoid timezone conversion
-        attendance_ids = attendances.ids
-        if not attendance_ids:
+        if not attendances:
             return {}
         
-        self.env.cr.execute("""
-            SELECT id, employee_id, check_in, check_out
-            FROM hr_attendance
-            WHERE id IN %s
-            ORDER BY check_in ASC
-        """, (tuple(attendance_ids),))
-        
-        raw_data = self.env.cr.dictfetchall()
-        
-        # Group by employee and date
+        # Use start_date and end_date fields directly - they already have offset applied
         attendance_dict = defaultdict(lambda: defaultdict(lambda: {'check_ins': [], 'check_outs': []}))
         
-        for row in raw_data:
-            employee = self.env['hr.employee'].browse(row['employee_id'])
-            # Get raw UTC datetime values directly from database (no timezone conversion)
-            # PostgreSQL returns naive datetime objects representing UTC time - use directly
-            if row['check_in']:
-                check_in_raw = row['check_in']
-                # PostgreSQL returns datetime object (naive, UTC) - use directly
-                if isinstance(check_in_raw, datetime):
-                    check_in_utc = check_in_raw
-                else:
-                    # Parse string, remove microseconds and timezone if present
-                    check_in_str = str(check_in_raw).split('.')[0].split('+')[0]
-                    if check_in_str.endswith('-00:00'):
-                        check_in_str = check_in_str[:-6]
-                    check_in_utc = datetime.strptime(check_in_str, '%Y-%m-%d %H:%M:%S')
-                check_in_date = check_in_utc.date()
-                attendance_dict[employee][check_in_date]['check_ins'].append(check_in_utc)
+        for attendance in attendances:
+            employee = attendance.employee_id
+            # Get date from check_in for grouping (use check_in date, not start_date)
+            check_in_date = attendance.check_in.date() if attendance.check_in else None
             
-            if row['check_out']:
-                check_out_raw = row['check_out']
-                if isinstance(check_out_raw, datetime):
-                    check_out_utc = check_out_raw
-                else:
-                    check_out_str = str(check_out_raw).split('.')[0].split('+')[0]
-                    if check_out_str.endswith('-00:00'):
-                        check_out_str = check_out_str[:-6]
-                    check_out_utc = datetime.strptime(check_out_str, '%Y-%m-%d %H:%M:%S')
-                # Use the same date as check_in for grouping
-                if row['check_in']:
-                    check_in_raw = row['check_in']
-                    if isinstance(check_in_raw, datetime):
-                        check_in_date = check_in_raw.date()
-                    else:
-                        check_in_str = str(check_in_raw).split('.')[0].split('+')[0]
-                        if check_in_str.endswith('-00:00'):
-                            check_in_str = check_in_str[:-6]
-                        check_in_date = datetime.strptime(check_in_str, '%Y-%m-%d %H:%M:%S').date()
-                else:
-                    check_in_date = check_out_utc.date()
-                attendance_dict[employee][check_in_date]['check_outs'].append(check_out_utc)
+            if not check_in_date:
+                continue
+            
+            # Use start_date and end_date fields which already have offset and formatting applied
+            if attendance.start_date:
+                attendance_dict[employee][check_in_date]['check_ins'].append(attendance.start_date)
+            
+            if attendance.end_date:
+                attendance_dict[employee][check_in_date]['check_outs'].append(attendance.end_date)
         
         return attendance_dict
 
-    def _format_time(self, dt):
-        """Format datetime to time string - use raw value directly as HH:MM"""
-        if dt:
-            # Take the raw datetime value directly from attendance record
-            # Format as HH:MM (e.g., 10:29 from 12/26/2025 10:29:35)
-            # No timezone conversion, just extract time portion
-            return dt.strftime('%H:%M')
+    def _format_time(self, time_str):
+        """Return time string directly - start_date and end_date are already formatted as HH:MM"""
+        if time_str:
+            # Time is already a string in HH:MM format from start_date/end_date fields
+            return str(time_str)
         return ''
 
     def action_generate_excel(self):
